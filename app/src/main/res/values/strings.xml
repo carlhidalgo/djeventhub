@@ -1,0 +1,5 @@
+<resources>
+    <string name="app_name">DJEventHub</string>
+    <!-- default_web_client_id required by Google Sign-In (from google-services.json oauth_client.client_id) -->
+    <string name="default_web_client_id">978908157887-07d6ppkemk9huliqnc12ju6n3nd6ubkp.apps.googleusercontent.com</string>
+</resources>
