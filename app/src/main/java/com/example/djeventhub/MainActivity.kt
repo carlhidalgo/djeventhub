@@ -6,6 +6,7 @@ import androidx.activity.compose.setContent
 import androidx.activity.enableEdgeToEdge
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.padding
+import androidx.compose.material3.Button
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
@@ -28,9 +29,8 @@ class MainActivity : ComponentActivity() {
                 Scaffold(modifier = Modifier.fillMaxSize()) { innerPadding ->
                     val showGreeting = remember { mutableStateOf<String?>(null) }
                     if (showGreeting.value == null) {
-                        // Show authentication screen
-                        val vm = AuthViewModel()
-                        AuthScreen(viewModel = vm) { uid ->
+                        // Show a simple authentication screen (demo)
+                        AuthScreen { uid ->
                             showGreeting.value = uid
                         }
                     } else {
@@ -55,5 +55,13 @@ fun Greeting(name: String, modifier: Modifier = Modifier) {
 fun GreetingPreview() {
     DJEventHubTheme {
         Greeting("Android")
+    }
+}
+
+@Composable
+fun AuthScreen(onAuthenticated: (String) -> Unit) {
+    // Simple demo auth UI: a button that simulates sign-in and returns a demo UID.
+    Button(onClick = { onAuthenticated("demo-user") }) {
+        Text("Iniciar sesión (demo)")
     }
 }
