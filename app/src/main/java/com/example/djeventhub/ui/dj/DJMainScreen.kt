@@ -56,8 +56,8 @@ fun DJMainScreen(
         ),
         BottomNavItem(
             route = DJScreen.CHAT.route,
-            selectedIcon = Icons.Filled.ChatBubble,
-            unselectedIcon = Icons.Outlined.ChatBubbleOutline,
+            selectedIcon = Icons.Filled.Email,
+            unselectedIcon = Icons.Outlined.Email,
             label = "Chat"
         ),
         BottomNavItem(
@@ -79,7 +79,7 @@ fun DJMainScreen(
                         DJScreen.MAP.route -> currentScreen = DJScreen.MAP
                         DJScreen.ADD.route -> onAddEvent()
                         DJScreen.CHAT.route -> currentScreen = DJScreen.CHAT
-                        DJScreen.PROFILE.route -> onProfile()
+                        DJScreen.PROFILE.route -> currentScreen = DJScreen.PROFILE
                     }
                 }
             )
@@ -123,10 +123,23 @@ fun DJMainScreen(
                         )
                     }
                     DJScreen.CHAT -> {
-                        ChatPlaceholderScreen()
+                        com.example.djeventhub.ui.chat.ChatListScreen(
+                            onNavigateBack = { currentScreen = DJScreen.HOME },
+                            onChatClick = { chatId ->
+                                // For now, just navigate - in full nav we'd handle this properly
+                                // This would typically navigate to the chat screen
+                            }
+                        )
+                    }
+                    DJScreen.PROFILE -> {
+                        com.example.djeventhub.ui.dj.profile.DJProfileScreen(
+                            onNavigateBack = { currentScreen = DJScreen.HOME },
+                            onEdit = { /* TODO: Navigate to edit profile */ },
+                            showTopBar = false
+                        )
                     }
                     else -> {
-                        // Profile se maneja con navegación externa
+                        // Fallback
                     }
                 }
             }
@@ -159,7 +172,7 @@ fun ChatPlaceholderScreen() {
                 verticalArrangement = Arrangement.Center
             ) {
                 Icon(
-                    imageVector = Icons.Outlined.Chat,
+                    imageVector = Icons.Outlined.Email,
                     contentDescription = null,
                     modifier = Modifier.size(72.dp),
                     tint = com.example.djeventhub.ui.theme.TextSecondary

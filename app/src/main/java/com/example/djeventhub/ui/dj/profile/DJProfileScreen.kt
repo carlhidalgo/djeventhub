@@ -37,7 +37,8 @@ import com.example.djeventhub.ui.theme.*
 fun DJProfileScreen(
     onNavigateBack: () -> Unit,
     onEdit: () -> Unit,
-    viewModel: DJProfileViewModel = viewModel()
+    viewModel: DJProfileViewModel = viewModel(),
+    showTopBar: Boolean = true
 ) {
     val uiState by viewModel.uiState.collectAsState()
 
@@ -48,24 +49,26 @@ fun DJProfileScreen(
 
     Scaffold(
         topBar = {
-            TopAppBar(
-                title = { Text("Mi Perfil DJ") },
-                navigationIcon = {
-                    IconButton(onClick = onNavigateBack) {
-                        Icon(Icons.AutoMirrored.Filled.ArrowBack, contentDescription = "Volver")
-                    }
-                },
-                actions = {
-                    if (uiState is DJProfileUiState.Success) {
-                        IconButton(onClick = onEdit) {
-                            Icon(Icons.Default.Edit, contentDescription = "Editar", tint = NeonPink)
+            if (showTopBar) {
+                TopAppBar(
+                    title = { Text("Mi Perfil DJ") },
+                    navigationIcon = {
+                        IconButton(onClick = onNavigateBack) {
+                            Icon(Icons.AutoMirrored.Filled.ArrowBack, contentDescription = "Volver")
                         }
-                    }
-                },
-                colors = TopAppBarDefaults.topAppBarColors(
-                    containerColor = DeepBlack
+                    },
+                    actions = {
+                        if (uiState is DJProfileUiState.Success) {
+                            IconButton(onClick = onEdit) {
+                                Icon(Icons.Default.Edit, contentDescription = "Editar", tint = NeonPink)
+                            }
+                        }
+                    },
+                    colors = TopAppBarDefaults.topAppBarColors(
+                        containerColor = DeepBlack
+                    )
                 )
-            )
+            }
         },
         containerColor = DeepBlack
     ) { padding ->

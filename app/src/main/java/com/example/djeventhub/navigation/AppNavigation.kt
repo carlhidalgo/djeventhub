@@ -27,6 +27,10 @@ sealed class Screen(val route: String) {
     object AddEvent : Screen("add_event")
     object DJProfile : Screen("dj_profile")
     object EditDJProfile : Screen("edit_dj_profile")
+    object ChatList : Screen("chat_list")
+    object Chat : Screen("chat/{chatId}/{otherUserName}") {
+        fun createRoute(chatId: String, otherUserName: String) = "chat/$chatId/$otherUserName"
+    }
 }
 
 @Composable
@@ -169,6 +173,42 @@ fun AppNavigation(
 
         composable(Screen.EditDJProfile.route) {
             com.example.djeventhub.ui.dj.profile.EditDJProfileScreen(
+                onNavigateBack = {
+                    navController.popBackStack()
+                }
+            )
+        }
+
+        composable(Screen.ChatList.route) {
+            com.example.djeventhub.ui.chat.ChatListScreen(
+                onNavigateBack = {
+                    navController.popBackStack()
+                },
+                onChatClick = { chatId ->
+                    // Get chat to extract other user name
+                    scope.launch {
+                        val chatRepo = com.example.djeventhub.data.ChatRepository()
+                        val currentUserId = FirebaseAuth.getInstance().currentUser?.uid ?: ""
+                        // For now, navigate with chatId - we'll get the name in the screen
+                        navController.navigate(Screen.Chat.createRoute(chatId, "Chat"))
+                    }
+                }
+            )
+        }
+
+        composable(
+            route = Screen.Chat.route,
+            arguments = listOf(
+                androidx.navigation.navArgument("chatId") { type = androidx.navigation.NavType.StringType },
+                androidx.navigation.navArgument("otherUserName") { type = androidx.navigation.NavType.StringType }
+            )
+        ) { backStackEntry ->
+            val chatId = backStackEntry.arguments?.getString("chatId") ?: ""
+            val otherUserName = backStackEntry.arguments?.getString("otherUserName") ?: "Chat"
+
+            com.example.djeventhub.ui.chat.ChatScreen(
+                chatId = chatId,
+                otherUserName = otherUserName,
                 onNavigateBack = {
                     navController.popBackStack()
                 }

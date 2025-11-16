@@ -2,8 +2,10 @@ package com.example.djeventhub.ui.productora
 
 import androidx.compose.animation.*
 import androidx.compose.animation.core.tween
+import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.*
 import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.automirrored.filled.ArrowBack
 import androidx.compose.material.icons.filled.*
 import androidx.compose.material.icons.outlined.*
 import androidx.compose.material3.*
@@ -56,8 +58,8 @@ fun ProductoraMainScreen(
         ),
         BottomNavItem(
             route = ProductoraScreen.CHAT.route,
-            selectedIcon = Icons.Filled.Chat,
-            unselectedIcon = Icons.Outlined.Chat,
+            selectedIcon = Icons.Filled.Email,
+            unselectedIcon = Icons.Outlined.Email,
             label = "Chat"
         ),
         BottomNavItem(
@@ -79,7 +81,7 @@ fun ProductoraMainScreen(
                         ProductoraScreen.SEARCH.route -> currentScreen = ProductoraScreen.SEARCH
                         ProductoraScreen.ADD.route -> onAddEvent()
                         ProductoraScreen.CHAT.route -> currentScreen = ProductoraScreen.CHAT
-                        ProductoraScreen.PROFILE.route -> onProfile()
+                        ProductoraScreen.PROFILE.route -> currentScreen = ProductoraScreen.PROFILE
                     }
                 }
             )
@@ -119,8 +121,13 @@ fun ProductoraMainScreen(
                     ProductoraScreen.CHAT -> {
                         ChatPlaceholderScreen()
                     }
+                    ProductoraScreen.PROFILE -> {
+                        ProductoraProfilePlaceholderScreen(
+                            onNavigateBack = { currentScreen = ProductoraScreen.HOME }
+                        )
+                    }
                     else -> {
-                        // Profile se maneja con navegación externa
+                        // Fallback
                     }
                 }
             }
@@ -213,7 +220,7 @@ fun ChatPlaceholderScreen() {
                 verticalArrangement = Arrangement.Center
             ) {
                 Icon(
-                    imageVector = Icons.Outlined.Chat,
+                    imageVector = Icons.Outlined.Email,
                     contentDescription = null,
                     modifier = Modifier.size(72.dp),
                     tint = com.example.djeventhub.ui.theme.TextSecondary
@@ -229,6 +236,83 @@ fun ChatPlaceholderScreen() {
                     text = "Conecta con DJs y coordina tus eventos",
                     style = MaterialTheme.typography.bodyMedium,
                     color = com.example.djeventhub.ui.theme.TextTertiary
+                )
+            }
+        }
+    }
+}
+
+@OptIn(ExperimentalMaterial3Api::class)
+@Composable
+fun ProductoraProfilePlaceholderScreen(
+    onNavigateBack: () -> Unit
+) {
+    Scaffold(
+        topBar = {
+            TopAppBar(
+                title = { Text("Mi Perfil") },
+                navigationIcon = {
+                    IconButton(onClick = onNavigateBack) {
+                        Icon(Icons.AutoMirrored.Filled.ArrowBack, contentDescription = "Volver")
+                    }
+                },
+                colors = TopAppBarDefaults.topAppBarColors(
+                    containerColor = com.example.djeventhub.ui.theme.DeepBlack
+                )
+            )
+        },
+        containerColor = com.example.djeventhub.ui.theme.DeepBlack
+    ) { padding ->
+        Box(
+            modifier = Modifier
+                .fillMaxSize()
+                .padding(padding),
+            contentAlignment = Alignment.Center
+        ) {
+            Column(
+                horizontalAlignment = Alignment.CenterHorizontally,
+                verticalArrangement = Arrangement.Center,
+                modifier = Modifier.padding(32.dp)
+            ) {
+                // Avatar placeholder
+                Box(
+                    modifier = Modifier
+                        .size(120.dp)
+                        .background(
+                            brush = androidx.compose.ui.graphics.Brush.linearGradient(
+                                colors = listOf(
+                                    com.example.djeventhub.ui.theme.NeonPink,
+                                    com.example.djeventhub.ui.theme.NeonPurple
+                                )
+                            ),
+                            shape = androidx.compose.foundation.shape.CircleShape
+                        ),
+                    contentAlignment = Alignment.Center
+                ) {
+                    Icon(
+                        imageVector = Icons.Default.AccountCircle,
+                        contentDescription = null,
+                        modifier = Modifier.size(60.dp),
+                        tint = com.example.djeventhub.ui.theme.DeepBlack
+                    )
+                }
+
+                Spacer(modifier = Modifier.height(24.dp))
+
+                Text(
+                    text = "Perfil de Productora",
+                    style = MaterialTheme.typography.headlineMedium,
+                    color = com.example.djeventhub.ui.theme.TextPrimary,
+                    fontWeight = androidx.compose.ui.text.font.FontWeight.Bold
+                )
+
+                Spacer(modifier = Modifier.height(8.dp))
+
+                Text(
+                    text = "Próximamente podrás editar tu perfil",
+                    style = MaterialTheme.typography.bodyMedium,
+                    color = com.example.djeventhub.ui.theme.TextSecondary,
+                    textAlign = androidx.compose.ui.text.style.TextAlign.Center
                 )
             }
         }
