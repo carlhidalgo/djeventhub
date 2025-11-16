@@ -1,27 +1,111 @@
 package com.example.djeventhub
 
+import android.location.Location
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
+import com.example.djeventhub.location.LocationManager
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.launch
 
-// ViewModel that exposes a list of events
-class EventListViewModel(private val repository: EventRepository) : ViewModel() {
+// ViewModel that exposes a list of events sorted by proximity
+class EventListViewModel(
+    private val repository: EventRepository,
+    private val locationManager: LocationManager? = null
+) : ViewModel() {
 
-    private val _events = MutableStateFlow<List<Event>>(emptyList())
-    val events: StateFlow<List<Event>> = _events
+    private val _events = MutableStateFlow<List<EventWithDistance>>(emptyList())
+    val events: StateFlow<List<EventWithDistance>> = _events
+
+    private val _isLoadingLocation = MutableStateFlow(false)
+    val isLoadingLocation: StateFlow<Boolean> = _isLoadingLocation
+
+    private val _locationError = MutableStateFlow<String?>(null)
+    val locationError: StateFlow<String?> = _locationError
+
+    private val _userLocation = MutableStateFlow<Pair<Double, Double>?>(null)
+    val userLocation: StateFlow<Pair<Double, Double>?> = _userLocation
+
+    init {
+        // Observe repository changes
+        viewModelScope.launch {
+            repository.events.collect { eventsList ->
+                updateEventsWithDistance(eventsList)
+            }
+        }
+        loadEvents()
+    }
 
     fun loadEvents() {
         viewModelScope.launch {
             try {
                 val result = repository.getEvents()
-                _events.value = result
+                updateEventsWithDistance(result)
             } catch (e: Exception) {
-                // handle or log error
                 _events.value = emptyList()
             }
         }
     }
+
+    private suspend fun updateEventsWithDistance(eventsList: List<Event>) {
+        // Try to get current location to sort by proximity
+        val currentLocation = try {
+            _isLoadingLocation.value = true
+            locationManager?.getCurrentLocation()
+        } catch (e: Exception) {
+            _locationError.value = "No se pudo obtener la ubicación"
+            null
+        } finally {
+            _isLoadingLocation.value = false
+        }
+
+        // Update user location state
+        currentLocation?.let {
+            _userLocation.value = Pair(it.latitude, it.longitude)
+        }
+
+        // Convert events to EventWithDistance and sort
+        val eventsWithDistance = eventsList.map { event ->
+            val distance = if (currentLocation != null &&
+                              event.latitude != null &&
+                              event.longitude != null) {
+                locationManager?.calculateDistance(
+                    currentLocation.latitude,
+                    currentLocation.longitude,
+                    event.latitude,
+                    event.longitude
+                )
+            } else {
+                null
+            }
+            EventWithDistance(event, distance)
+        }
+
+        // Sort: events with distance first (by distance), then others by date
+        _events.value = eventsWithDistance.sortedWith(
+            compareBy(
+                { it.distanceInMeters == null }, // nulls last
+                { it.distanceInMeters },          // then by distance
+                { it.event.date }                 // then by date
+            )
+        )
+    }
+
+    fun refreshLocation() {
+        loadEvents()
+    }
+}
+
+// Data class to hold an event with its calculated distance
+data class EventWithDistance(
+    val event: Event,
+    val distanceInMeters: Float?
+) {
+    val distanceText: String
+        get() = when {
+            distanceInMeters == null -> ""
+            distanceInMeters < 1000 -> "${distanceInMeters.toInt()} m"
+            else -> String.format("%.1f km", distanceInMeters / 1000)
+        }
 }
 

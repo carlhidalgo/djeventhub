@@ -1,0 +1,494 @@
+package com.example.djeventhub.ui.dj.profile
+
+import android.net.Uri
+import androidx.activity.compose.rememberLauncherForActivityResult
+import androidx.activity.result.contract.ActivityResultContracts
+import androidx.compose.animation.core.*
+import androidx.compose.foundation.background
+import androidx.compose.foundation.clickable
+import androidx.compose.foundation.layout.*
+import androidx.compose.foundation.layout.FlowRow
+import androidx.compose.foundation.rememberScrollState
+import androidx.compose.foundation.shape.CircleShape
+import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.foundation.verticalScroll
+import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.automirrored.filled.ArrowBack
+import androidx.compose.material.icons.filled.Edit
+import androidx.compose.material.icons.filled.Star
+import androidx.compose.material3.*
+import androidx.compose.runtime.*
+import androidx.compose.ui.Alignment
+import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.clip
+import androidx.compose.ui.draw.rotate
+import androidx.compose.ui.draw.scale
+import androidx.compose.ui.graphics.graphicsLayer
+import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.unit.dp
+import androidx.lifecycle.viewmodel.compose.viewModel
+import coil.compose.AsyncImage
+import com.example.djeventhub.models.User
+import com.example.djeventhub.ui.animations.*
+import com.example.djeventhub.ui.theme.*
+
+@OptIn(ExperimentalMaterial3Api::class, ExperimentalLayoutApi::class)
+@Composable
+fun DJProfileScreen(
+    onNavigateBack: () -> Unit,
+    onEdit: () -> Unit,
+    viewModel: DJProfileViewModel = viewModel()
+) {
+    val uiState by viewModel.uiState.collectAsState()
+
+    // Image picker
+    val launcher = rememberLauncherForActivityResult(ActivityResultContracts.GetContent()) { uri: Uri? ->
+        uri?.let { viewModel.uploadProfilePhoto(it) }
+    }
+
+    Scaffold(
+        topBar = {
+            TopAppBar(
+                title = { Text("Mi Perfil DJ") },
+                navigationIcon = {
+                    IconButton(onClick = onNavigateBack) {
+                        Icon(Icons.AutoMirrored.Filled.ArrowBack, contentDescription = "Volver")
+                    }
+                },
+                actions = {
+                    if (uiState is DJProfileUiState.Success) {
+                        IconButton(onClick = onEdit) {
+                            Icon(Icons.Default.Edit, contentDescription = "Editar", tint = NeonPink)
+                        }
+                    }
+                },
+                colors = TopAppBarDefaults.topAppBarColors(
+                    containerColor = DeepBlack
+                )
+            )
+        },
+        containerColor = DeepBlack
+    ) { padding ->
+        when (val state = uiState) {
+            is DJProfileUiState.Loading -> {
+                Box(
+                    modifier = Modifier
+                        .fillMaxSize()
+                        .padding(padding),
+                    contentAlignment = Alignment.Center
+                ) {
+                    CircularProgressIndicator(color = NeonPink)
+                }
+            }
+
+            is DJProfileUiState.Error -> {
+                Box(
+                    modifier = Modifier
+                        .fillMaxSize()
+                        .padding(padding),
+                    contentAlignment = Alignment.Center
+                ) {
+                    Text(
+                        text = state.message,
+                        color = ErrorRed,
+                        style = MaterialTheme.typography.bodyLarge
+                    )
+                }
+            }
+
+            is DJProfileUiState.Success -> {
+                DJProfileContent(
+                    user = state.user,
+                    onPickImage = { launcher.launch("image/*") },
+                    modifier = Modifier.padding(padding)
+                )
+            }
+        }
+    }
+}
+
+@OptIn(ExperimentalLayoutApi::class)
+@Composable
+fun DJProfileContent(user: User, onPickImage: () -> Unit, modifier: Modifier = Modifier) {
+    Column(
+        modifier = modifier
+            .fillMaxSize()
+            .verticalScroll(rememberScrollState())
+            .padding(16.dp),
+        horizontalAlignment = Alignment.CenterHorizontally
+    ) {
+        // Profile header with avatar - animated entrance
+        Box(modifier = Modifier.fadeInWithDelay(0)) {
+            ProfileHeader(user, onPickImage)
+        }
+
+        Spacer(modifier = Modifier.height(24.dp))
+
+        // Rating section - animated with delay
+        Box(modifier = Modifier.fadeInWithDelay(100)) {
+            RatingSection(rating = user.rating, totalRatings = user.totalRatings)
+        }
+
+        Spacer(modifier = Modifier.height(24.dp))
+
+        // Bio section
+        if (!user.bio.isNullOrBlank()) {
+            InfoCard(title = "Biografía", content = user.bio)
+            Spacer(modifier = Modifier.height(16.dp))
+        }
+
+        // Music genres
+        if (user.musicGenres.isNotEmpty()) {
+            MusicGenresCard(genres = user.musicGenres)
+            Spacer(modifier = Modifier.height(16.dp))
+        }
+
+        // Availability
+        if (user.availableDays.isNotEmpty()) {
+            AvailabilityCard(days = user.availableDays)
+            Spacer(modifier = Modifier.height(16.dp))
+        }
+
+        // Stats
+        StatsCard(eventsCompleted = user.eventsCompleted)
+
+        Spacer(modifier = Modifier.height(16.dp))
+
+        // Contact info
+        if (!user.phone.isNullOrBlank() || !user.location.isNullOrBlank()) {
+            ContactCard(phone = user.phone, location = user.location)
+        }
+    }
+}
+
+@Composable
+fun ProfileHeader(user: User, onPickImage: () -> Unit) {
+    Column(
+        horizontalAlignment = Alignment.CenterHorizontally
+    ) {
+        // Avatar with neon glow - click to change photo
+        Box(
+            modifier = Modifier
+                .size(140.dp)
+                .background(
+                    brush = androidx.compose.ui.graphics.Brush.radialGradient(
+                        colors = listOf(
+                            NeonPink.copy(alpha = 0.4f),
+                            androidx.compose.ui.graphics.Color.Transparent
+                        ),
+                        radius = 200f
+                    ),
+                    shape = CircleShape
+                )
+                .clickable { onPickImage() }
+        ) {
+            if (!user.profileImageUrl.isNullOrBlank()) {
+                AsyncImage(
+                    model = user.profileImageUrl,
+                    contentDescription = "Foto de perfil",
+                    modifier = Modifier
+                        .size(120.dp)
+                        .align(Alignment.Center)
+                        .clip(CircleShape),
+                    error = androidx.compose.ui.res.painterResource(
+                        android.R.drawable.ic_menu_camera
+                    ),
+                    placeholder = androidx.compose.ui.res.painterResource(
+                        android.R.drawable.ic_menu_gallery
+                    )
+                )
+            } else {
+                Box(
+                    modifier = Modifier
+                        .size(120.dp)
+                        .align(Alignment.Center)
+                        .background(
+                            brush = androidx.compose.ui.graphics.Brush.linearGradient(
+                                colors = listOf(NeonPink, NeonPurple)
+                            ),
+                            shape = CircleShape
+                        ),
+                    contentAlignment = Alignment.Center
+                ) {
+                    Text(
+                        text = (user.artistName ?: user.displayName).firstOrNull()?.uppercase() ?: "DJ",
+                        style = MaterialTheme.typography.displayLarge,
+                        color = DeepBlack,
+                        fontWeight = FontWeight.Bold
+                    )
+                }
+            }
+        }
+
+        Spacer(modifier = Modifier.height(16.dp))
+
+        Text(
+            text = user.artistName ?: user.displayName,
+            style = MaterialTheme.typography.headlineMedium,
+            fontWeight = FontWeight.Bold,
+            color = TextPrimary
+        )
+
+        if (user.artistName != null && user.displayName != user.artistName) {
+            Text(
+                text = user.displayName,
+                style = MaterialTheme.typography.bodyMedium,
+                color = TextSecondary
+            )
+        }
+    }
+}
+
+@Composable
+fun RatingSection(rating: Double, totalRatings: Int) {
+    Card(
+        modifier = Modifier.fillMaxWidth(),
+        shape = RoundedCornerShape(16.dp),
+        colors = CardDefaults.cardColors(containerColor = DarkSurface)
+    ) {
+        Row(
+            modifier = Modifier
+                .fillMaxWidth()
+                .padding(20.dp),
+            horizontalArrangement = Arrangement.Center,
+            verticalAlignment = Alignment.CenterVertically
+        ) {
+            // Star rating with staggered animation
+            repeat(5) { index ->
+                val scale = remember { Animatable(0f) }
+
+                LaunchedEffect(Unit) {
+                    kotlinx.coroutines.delay(index * 50L)
+                    scale.animateTo(
+                        targetValue = 1f,
+                        animationSpec = spring(
+                            dampingRatio = Spring.DampingRatioMediumBouncy,
+                            stiffness = Spring.StiffnessMedium
+                        )
+                    )
+                }
+
+                Icon(
+                    imageVector = Icons.Default.Star,
+                    contentDescription = null,
+                    tint = if (index < rating) NeonPink else TextTertiary,
+                    modifier = Modifier
+                        .size(32.dp)
+                        .scale(scale.value)
+                )
+            }
+
+            Spacer(modifier = Modifier.width(16.dp))
+
+            Column {
+                Text(
+                    text = String.format(java.util.Locale.getDefault(), "%.1f", rating),
+                    style = MaterialTheme.typography.headlineMedium,
+                    color = NeonPink,
+                    fontWeight = FontWeight.Bold
+                )
+                Text(
+                    text = "$totalRatings calificaciones",
+                    style = MaterialTheme.typography.bodySmall,
+                    color = TextSecondary
+                )
+            }
+        }
+    }
+}
+
+@Composable
+fun InfoCard(title: String, content: String) {
+    Card(
+        modifier = Modifier.fillMaxWidth(),
+        shape = RoundedCornerShape(16.dp),
+        colors = CardDefaults.cardColors(containerColor = DarkSurface)
+    ) {
+        Column(modifier = Modifier.padding(20.dp)) {
+            Text(
+                text = title,
+                style = MaterialTheme.typography.titleMedium,
+                color = NeonPink,
+                fontWeight = FontWeight.Bold
+            )
+            Spacer(modifier = Modifier.height(8.dp))
+            Text(
+                text = content,
+                style = MaterialTheme.typography.bodyMedium,
+                color = TextPrimary
+            )
+        }
+    }
+}
+
+@OptIn(ExperimentalLayoutApi::class)
+@Composable
+fun MusicGenresCard(genres: List<String>) {
+    Card(
+        modifier = Modifier.fillMaxWidth(),
+        shape = RoundedCornerShape(16.dp),
+        colors = CardDefaults.cardColors(containerColor = DarkSurface)
+    ) {
+        Column(modifier = Modifier.padding(20.dp)) {
+            Text(
+                text = "Géneros Musicales",
+                style = MaterialTheme.typography.titleMedium,
+                color = NeonPurple,
+                fontWeight = FontWeight.Bold
+            )
+            Spacer(modifier = Modifier.height(12.dp))
+
+            FlowRow(
+                horizontalArrangement = Arrangement.spacedBy(8.dp),
+                verticalArrangement = Arrangement.spacedBy(8.dp)
+            ) {
+                genres.forEach { genre ->
+                    GenreChip(genre)
+                }
+            }
+        }
+    }
+}
+
+@Composable
+fun GenreChip(genre: String) {
+    Box(
+        modifier = Modifier
+            .background(
+                brush = androidx.compose.ui.graphics.Brush.horizontalGradient(
+                    colors = listOf(
+                        NeonPink.copy(alpha = 0.2f),
+                        NeonPurple.copy(alpha = 0.2f)
+                    )
+                ),
+                shape = RoundedCornerShape(20.dp)
+            )
+            .padding(horizontal = 12.dp, vertical = 6.dp)
+    ) {
+        Text(
+            text = genre,
+            style = MaterialTheme.typography.labelMedium,
+            color = NeonPink,
+            fontWeight = FontWeight.Medium
+        )
+    }
+}
+
+@OptIn(ExperimentalLayoutApi::class)
+@Composable
+fun AvailabilityCard(days: List<String>) {
+    Card(
+        modifier = Modifier.fillMaxWidth(),
+        shape = RoundedCornerShape(16.dp),
+        colors = CardDefaults.cardColors(containerColor = DarkSurface)
+    ) {
+        Column(modifier = Modifier.padding(20.dp)) {
+            Text(
+                text = "Disponibilidad",
+                style = MaterialTheme.typography.titleMedium,
+                color = ElectricBlue,
+                fontWeight = FontWeight.Bold
+            )
+            Spacer(modifier = Modifier.height(12.dp))
+
+            FlowRow(
+                horizontalArrangement = Arrangement.spacedBy(8.dp),
+                verticalArrangement = Arrangement.spacedBy(8.dp)
+            ) {
+                days.forEach { day ->
+                    DayChip(day)
+                }
+            }
+        }
+    }
+}
+
+@Composable
+fun DayChip(day: String) {
+    Box(
+        modifier = Modifier
+            .background(
+                color = ElectricBlue.copy(alpha = 0.2f),
+                shape = RoundedCornerShape(20.dp)
+            )
+            .padding(horizontal = 12.dp, vertical = 6.dp)
+    ) {
+        Text(
+            text = day,
+            style = MaterialTheme.typography.labelMedium,
+            color = ElectricBlue,
+            fontWeight = FontWeight.Medium
+        )
+    }
+}
+
+@Composable
+fun StatsCard(eventsCompleted: Int) {
+    Card(
+        modifier = Modifier.fillMaxWidth(),
+        shape = RoundedCornerShape(16.dp),
+        colors = CardDefaults.cardColors(containerColor = DarkSurface)
+    ) {
+        Row(
+            modifier = Modifier
+                .fillMaxWidth()
+                .padding(20.dp),
+            horizontalArrangement = Arrangement.SpaceAround
+        ) {
+            StatItem(label = "Eventos Completados", value = eventsCompleted.toString())
+        }
+    }
+}
+
+@Composable
+fun StatItem(label: String, value: String) {
+    Column(horizontalAlignment = Alignment.CenterHorizontally) {
+        Text(
+            text = value,
+            style = MaterialTheme.typography.headlineMedium,
+            color = NeonCyan,
+            fontWeight = FontWeight.Bold
+        )
+        Text(
+            text = label,
+            style = MaterialTheme.typography.bodySmall,
+            color = TextSecondary
+        )
+    }
+}
+
+@Composable
+fun ContactCard(phone: String?, location: String?) {
+    Card(
+        modifier = Modifier.fillMaxWidth(),
+        shape = RoundedCornerShape(16.dp),
+        colors = CardDefaults.cardColors(containerColor = DarkSurface)
+    ) {
+        Column(modifier = Modifier.padding(20.dp)) {
+            Text(
+                text = "Contacto",
+                style = MaterialTheme.typography.titleMedium,
+                color = NeonOrange,
+                fontWeight = FontWeight.Bold
+            )
+            Spacer(modifier = Modifier.height(12.dp))
+
+            if (!phone.isNullOrBlank()) {
+                Text(
+                    text = "📱 $phone",
+                    style = MaterialTheme.typography.bodyMedium,
+                    color = TextPrimary
+                )
+            }
+
+            if (!location.isNullOrBlank()) {
+                if (!phone.isNullOrBlank()) Spacer(modifier = Modifier.height(4.dp))
+                Text(
+                    text = "📍 $location",
+                    style = MaterialTheme.typography.bodyMedium,
+                    color = TextPrimary
+                )
+            }
+        }
+    }
+}

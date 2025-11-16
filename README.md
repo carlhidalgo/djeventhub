@@ -16,6 +16,7 @@ DJ Event Hub es una aplicación Android escrita en Kotlin y Jetpack Compose para
 - [Compatibilidad AGP / Android Studio](#compatibilidad-agp--android-studio)
 - [Instalación y configuración rápida](#instalaci%C3%B3n-y-configuraci%C3%B3n-r%C3%A1pida)
 - [Configuración de Firebase (Auth)](#configuraci%C3%B3n-de-firebase-auth)
+- [Claves API y configuración local](#claves-api-y-configuraci%C3%B3n-local)
 - [Integración de dependencias importantes](#integraci%C3%B3n-de-dependencias-importantes)
 - [Funcionamiento del flujo de autenticación](#funcionamiento-del-flujo-de-autenticaci%C3%B3n)
 - [Comandos Git (Windows CMD)](#comandos-git-windows-cmd)
@@ -84,6 +85,49 @@ Pasos para configurar autenticación por Email/Password:
 6. Implementa la UI de autenticación (ya hay un ejemplo `AuthScreen.kt`) y el ViewModel que usa `FirebaseAuth`.
 
 Notas: si usas otros proveedores (Google Sign-In, Phone), deberás configurarlos en la consola de Firebase y añadir las dependencias y configuración adicional.
+
+---
+
+## Claves API y configuración local
+
+Nunca subas claves sensibles al repositorio. Usa `local.properties` (ya ignorado por Git) y placeholders de Gradle.
+
+1) Edita `local.properties` y añade (o completa) estas líneas:
+
+```properties
+MAPS_API_KEY=TU_CLAVE_DE_MAPS
+API_BASE_URL=https://api.example.com
+THIRD_PARTY_TOKEN=TU_TOKEN_SENSIBLE
+```
+
+2) El build ya lee estos valores y los expone así:
+
+- `AndroidManifest.xml` usa `${MAPS_API_KEY}` mediante `manifestPlaceholders`.
+- `BuildConfig.API_BASE_URL` y `BuildConfig.THIRD_PARTY_TOKEN` están disponibles en tiempo de ejecución.
+- También existe `R.string.api_base_url` si prefieres leerlo como recurso.
+
+3) Cómo usarlos en código Kotlin:
+
+```kotlin
+// Read from BuildConfig
+val baseUrl = BuildConfig.API_BASE_URL
+val token = BuildConfig.THIRD_PARTY_TOKEN
+
+// Read from resources
+// val baseUrl = context.getString(R.string.api_base_url)
+```
+
+4) Cómo usarlos en el Manifest (ya configurado):
+
+```xml
+<meta-data
+    android:name="com.google.android.geo.API_KEY"
+    android:value="${MAPS_API_KEY}" />
+```
+
+5) Entornos por buildType o flavors (opcional): define valores distintos en `debug` y `release` o por `productFlavors` declarando `buildConfigField`/`manifestPlaceholders` dentro de cada bloque.
+
+6) Alternativa (opcional): `com.google.android.libraries.mapsplatform.secrets-gradle-plugin` para gestionar secretos con validaciones. Si se desea, se puede integrar.
 
 ---
 
@@ -175,8 +219,8 @@ Si el repositorio remoto existía y fue eliminado, recrea el repositorio en GitH
 
 - Error: "AGP incompatible (8.9.1)" → ver sección Compatibilidad AGP.
 - Error: `google-services.json missing` → colocar el archivo en `app/`.
-- Error al pushear por SSH → verificar que tu clave pública esté en GitHub y que el agente SSH esté corriendo.
 - Problemas con versiones de Compose o librerías → centraliza versiones en `libs.versions.toml` o actualiza las versiones para que sean compatibles.
+- Falta de MAPS_API_KEY → añade la clave en `local.properties`.
 
 ---
 
@@ -196,6 +240,3 @@ Proyecto bajo licencia MIT. Libera el uso y modificación mientras conserves la 
 ---
 
 ## Contacto y ayuda
-
-
-

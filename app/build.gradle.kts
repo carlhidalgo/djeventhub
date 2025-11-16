@@ -1,7 +1,21 @@
+import java.util.Properties
+
 plugins {
     alias(libs.plugins.android.application)
     alias(libs.plugins.kotlin.android)
 }
+
+// Load API keys from local.properties (not versioned) or environment vars
+val localProps = Properties().apply {
+    val f = rootProject.file("local.properties")
+    if (f.exists()) {
+        f.inputStream().use { input ->
+            this.load(input)
+        }
+    }
+}
+fun prop(name: String, default: String = ""): String =
+    (localProps.getProperty(name) ?: System.getenv(name) ?: default)
 
 android {
     namespace = "com.example.djeventhub"
@@ -18,6 +32,21 @@ android {
         vectorDrawables {
             useSupportLibrary = true
         }
+
+        // Expose API keys / configs
+        val mapsKey = prop("MAPS_API_KEY", "")
+        val apiBaseUrl = prop("API_BASE_URL", "https://api.example.com")
+        val thirdPartyToken = prop("THIRD_PARTY_TOKEN", "")
+
+        // For Manifest placeholders (e.g., Google Maps)
+        manifestPlaceholders += mapOf(
+            "MAPS_API_KEY" to mapsKey
+        )
+
+        // For runtime use in code
+        resValue("string", "api_base_url", apiBaseUrl)
+        buildConfigField("String", "API_BASE_URL", "\"$apiBaseUrl\"")
+        buildConfigField("String", "THIRD_PARTY_TOKEN", "\"$thirdPartyToken\"")
     }
 
     buildTypes {
@@ -38,6 +67,7 @@ android {
     }
     buildFeatures {
         compose = true
+        buildConfig = true
     }
     composeOptions {
         kotlinCompilerExtensionVersion = "1.5.1"
@@ -95,6 +125,11 @@ dependencies {
     // Play Services - Location
     implementation("com.google.android.gms:play-services-location:21.0.1")
 
+    // Google Maps
+    implementation("com.google.android.gms:play-services-maps:18.2.0")
+    implementation("com.google.maps.android:maps-compose:4.3.0")
+    implementation("com.google.maps.android:maps-compose-utils:4.3.0")
+
     // Navigation Compose and ViewModel Compose
     implementation("androidx.navigation:navigation-compose:2.5.3")
     implementation("androidx.lifecycle:lifecycle-viewmodel-compose:2.5.1")
@@ -102,9 +137,18 @@ dependencies {
     // Firebase (BoM) and Auth
     implementation(platform("com.google.firebase:firebase-bom:32.2.0"))
     implementation("com.google.firebase:firebase-auth-ktx")
+    implementation("com.google.firebase:firebase-firestore-ktx")
+    // Add Firebase Storage for profile images
+    implementation("com.google.firebase:firebase-storage-ktx")
 
     // Google Sign-In
     implementation("com.google.android.gms:play-services-auth:20.7.0")
+
+    // Accompanist permissions
+    implementation("com.google.accompanist:accompanist-permissions:0.30.1")
+
+    // Image loading for Compose (profile pictures)
+    implementation("io.coil-kt:coil-compose:2.4.0")
 
     testImplementation(libs.junit)
     androidTestImplementation(libs.androidx.junit)

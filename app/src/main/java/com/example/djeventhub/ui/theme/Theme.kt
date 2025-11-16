@@ -11,44 +11,62 @@ import androidx.compose.material3.lightColorScheme
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.platform.LocalContext
 
-private val DarkColorScheme = darkColorScheme(
-    primary = Purple80,
-    secondary = PurpleGrey80,
-    tertiary = Pink80
-)
+// NEON-NOIR Color Scheme (Dark Mode Only)
+private val NeonNoirColorScheme = darkColorScheme(
+    // Primary (Main brand color - Neon Pink)
+    primary = NeonPink,
+    onPrimary = DeepBlack,
+    primaryContainer = DarkSurfaceVariant,
+    onPrimaryContainer = NeonPink,
 
-private val LightColorScheme = lightColorScheme(
-    primary = Purple40,
-    secondary = PurpleGrey40,
-    tertiary = Pink40
+    // Secondary (Accent color - Electric Blue)
+    secondary = ElectricBlue,
+    onSecondary = DeepBlack,
+    secondaryContainer = DarkSurfaceVariant,
+    onSecondaryContainer = ElectricBlue,
 
-    /* Other default colors to override
-    background = Color(0xFFFFFBFE),
-    surface = Color(0xFFFFFBFE),
-    onPrimary = Color.White,
-    onSecondary = Color.White,
-    onTertiary = Color.White,
-    onBackground = Color(0xFF1C1B1F),
-    onSurface = Color(0xFF1C1B1F),
-    */
+    // Tertiary (Purple accent)
+    tertiary = NeonPurple,
+    onTertiary = DeepBlack,
+    tertiaryContainer = DarkSurfaceVariant,
+    onTertiaryContainer = NeonPurple,
+
+    // Backgrounds
+    background = DeepBlack,
+    onBackground = TextPrimary,
+
+    // Surfaces (Cards, Dialogs)
+    surface = DarkSurface,
+    onSurface = TextPrimary,
+    surfaceVariant = DarkSurfaceVariant,
+    onSurfaceVariant = TextSecondary,
+
+    // Error states
+    error = ErrorRed,
+    onError = TextPrimary,
+    errorContainer = DarkSurfaceVariant,
+    onErrorContainer = ErrorRed,
+
+    // Outline (borders, dividers)
+    outline = TextTertiary,
+    outlineVariant = DarkSurfaceVariant,
+
+    // Inverse (for snackbars, etc)
+    inverseSurface = TextPrimary,
+    inverseOnSurface = DeepBlack,
+    inversePrimary = NeonPink
 )
 
 @Composable
 fun DJEventHubTheme(
-    darkTheme: Boolean = isSystemInDarkTheme(),
-    // Dynamic color is available on Android 12+
-    dynamicColor: Boolean = true,
+    // Force dark theme always (Neon-Noir is dark-only)
+    darkTheme: Boolean = true,
+    // Disable dynamic color to maintain brand consistency
+    dynamicColor: Boolean = false,
     content: @Composable () -> Unit
 ) {
-    val colorScheme = when {
-        dynamicColor && Build.VERSION.SDK_INT >= Build.VERSION_CODES.S -> {
-            val context = LocalContext.current
-            if (darkTheme) dynamicDarkColorScheme(context) else dynamicLightColorScheme(context)
-        }
-
-        darkTheme -> DarkColorScheme
-        else -> LightColorScheme
-    }
+    // Always use Neon-Noir color scheme
+    val colorScheme = NeonNoirColorScheme
 
     MaterialTheme(
         colorScheme = colorScheme,
