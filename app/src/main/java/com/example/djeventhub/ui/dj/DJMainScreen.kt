@@ -28,7 +28,8 @@ fun DJMainScreen(
     viewModel: EventListViewModel,
     onLogout: () -> Unit,
     onProfile: () -> Unit,
-    onAddEvent: () -> Unit
+    onAddEvent: () -> Unit,
+    onEventClick: (String) -> Unit = {}
 ) {
     var currentScreen by remember { mutableStateOf(DJScreen.HOME) }
     // Flag to show edit profile inside PROFILE tab
@@ -110,7 +111,8 @@ fun DJMainScreen(
                             onLogout = onLogout,
                             onAddEvent = onAddEvent,
                             onProfile = null, // Profile via bottom bar
-                            showOnlyList = true
+                            showOnlyList = true,
+                            onEventClick = onEventClick
                         )
                     }
                     DJScreen.MAP -> {
@@ -119,7 +121,8 @@ fun DJMainScreen(
                             onLogout = onLogout,
                             onAddEvent = onAddEvent,
                             onProfile = null, // Profile via bottom bar
-                            showOnlyMap = true
+                            showOnlyMap = true,
+                            onEventClick = onEventClick
                         )
                     }
                     DJScreen.CHAT -> {

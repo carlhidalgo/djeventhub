@@ -51,6 +51,33 @@ class EventRepository(
     }
 
     /**
+     * Get event by ID
+     */
+    suspend fun getEventById(eventId: String): Event? {
+        return try {
+            val doc = eventsCollection.document(eventId).get().await()
+            if (doc.exists()) {
+                Event(
+                    id = doc.id,
+                    name = doc.getString("name") ?: "",
+                    description = doc.getString("description") ?: "",
+                    date = doc.getLong("date") ?: 0L,
+                    endDate = doc.getLong("endDate"),
+                    locationName = doc.getString("locationName") ?: "",
+                    latitude = doc.getDouble("latitude"),
+                    longitude = doc.getDouble("longitude"),
+                    imageUrl = doc.getString("imageUrl"),
+                    musicGenre = doc.getString("musicGenre")
+                )
+            } else {
+                null
+            }
+        } catch (e: Exception) {
+            null
+        }
+    }
+
+    /**
      * Get all events (one-time fetch)
      */
     suspend fun getEvents(): List<Event> {

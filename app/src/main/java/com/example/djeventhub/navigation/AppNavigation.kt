@@ -3,10 +3,13 @@ package com.example.djeventhub.navigation
 import androidx.compose.runtime.*
 import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.navigation.NavHostController
+import androidx.navigation.NavType
 import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
 import androidx.navigation.compose.rememberNavController
+import androidx.navigation.navArgument
 import com.example.djeventhub.EventListViewModel
+import com.example.djeventhub.EventRepository
 import com.example.djeventhub.data.UserRepository
 import com.example.djeventhub.location.LocationManager
 import com.example.djeventhub.models.UserType
@@ -24,6 +27,9 @@ sealed class Screen(val route: String) {
     object DJHome : Screen("dj_home")
     object ProductoraHome : Screen("productora_home")
     object AddEvent : Screen("add_event")
+    object EventDetail : Screen("event_detail/{eventId}") {
+        fun createRoute(eventId: String) = "event_detail/$eventId"
+    }
     object DJProfile : Screen("dj_profile")
     object EditDJProfile : Screen("edit_dj_profile")
     object ChatList : Screen("chat_list")
@@ -124,6 +130,9 @@ fun AppNavigation(
                 },
                 onProfile = {
                     navController.navigate(Screen.DJProfile.route)
+                },
+                onEventClick = { eventId ->
+                    navController.navigate(Screen.EventDetail.createRoute(eventId))
                 }
             )
         }
@@ -146,6 +155,9 @@ fun AppNavigation(
                 },
                 onAddEvent = {
                     navController.navigate(Screen.AddEvent.route)
+                },
+                onEventClick = { eventId ->
+                    navController.navigate(Screen.EventDetail.createRoute(eventId))
                 }
             )
         }
@@ -156,6 +168,30 @@ fun AppNavigation(
                     navController.popBackStack()
                 }
             )
+        }
+
+        composable(
+            route = Screen.EventDetail.route,
+            arguments = listOf(navArgument("eventId") { type = NavType.StringType })
+        ) { backStackEntry ->
+            val eventId = backStackEntry.arguments?.getString("eventId") ?: ""
+            val repository = remember { EventRepository() }
+            var event by remember { mutableStateOf<com.example.djeventhub.Event?>(null) }
+
+            LaunchedEffect(eventId) {
+                event = repository.getEventById(eventId)
+            }
+
+            event?.let {
+                com.example.djeventhub.ui.events.EventDetailScreen(
+                    event = it,
+                    onNavigateBack = {
+                        navController.popBackStack()
+                    }
+                )
+            } ?: run {
+                androidx.compose.material3.CircularProgressIndicator()
+            }
         }
 
         composable(Screen.DJProfile.route) {

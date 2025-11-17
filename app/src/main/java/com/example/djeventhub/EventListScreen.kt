@@ -43,7 +43,8 @@ fun EventListScreen(
     viewModel: EventListViewModel,
     onLogout: () -> Unit,
     onAddEvent: () -> Unit,
-    onProfile: (() -> Unit)? = null
+    onProfile: (() -> Unit)? = null,
+    onEventClick: (String) -> Unit = {}
 ) {
     val events by viewModel.events.collectAsState()
     val isLoadingLocation by viewModel.isLoadingLocation.collectAsState()
@@ -119,6 +120,9 @@ fun EventListScreen(
                         onMapClick = { event ->
                             openInMaps(context, event)
                         },
+                        onEventClick = { eventId ->
+                            onEventClick(eventId)
+                        },
                         modifier = Modifier.animateItemPlacement(index)
                     )
                 }
@@ -131,6 +135,7 @@ fun EventListScreen(
 fun EventListItem(
     eventWithDistance: EventWithDistance,
     onMapClick: (Event) -> Unit,
+    onEventClick: (String) -> Unit = {},
     modifier: Modifier = Modifier
 ) {
     val event = eventWithDistance.event
@@ -154,7 +159,8 @@ fun EventListItem(
         modifier = modifier
             .fillMaxWidth()
             .padding(vertical = 8.dp)
-            .scale(if (isUpcoming) pulseScale else 1f),
+            .scale(if (isUpcoming) pulseScale else 1f)
+            .clickable { onEventClick(event.id) },
         shape = RoundedCornerShape(16.dp),
         colors = CardDefaults.cardColors(
             containerColor = com.example.djeventhub.ui.theme.DarkSurface

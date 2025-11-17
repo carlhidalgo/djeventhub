@@ -32,9 +32,11 @@ fun ProductoraMainScreen(
     onLogout: () -> Unit,
     onProfile: () -> Unit,
     onSearchDJs: () -> Unit,
-    onAddEvent: () -> Unit
+    onAddEvent: () -> Unit,
+    onEventClick: (String) -> Unit = {}
 ) {
     var currentScreen by remember { mutableStateOf(ProductoraScreen.HOME) }
+    var showEditProfile by remember { mutableStateOf(false) }
 
     val bottomNavItems = listOf(
         BottomNavItem(
@@ -77,11 +79,11 @@ fun ProductoraMainScreen(
                 currentRoute = currentScreen.route,
                 onItemClick = { route ->
                     when (route) {
-                        ProductoraScreen.HOME.route -> currentScreen = ProductoraScreen.HOME
-                        ProductoraScreen.SEARCH.route -> currentScreen = ProductoraScreen.SEARCH
+                        ProductoraScreen.HOME.route -> { currentScreen = ProductoraScreen.HOME; showEditProfile = false }
+                        ProductoraScreen.SEARCH.route -> { currentScreen = ProductoraScreen.SEARCH; showEditProfile = false }
                         ProductoraScreen.ADD.route -> onAddEvent()
-                        ProductoraScreen.CHAT.route -> currentScreen = ProductoraScreen.CHAT
-                        ProductoraScreen.PROFILE.route -> currentScreen = ProductoraScreen.PROFILE
+                        ProductoraScreen.CHAT.route -> { currentScreen = ProductoraScreen.CHAT; showEditProfile = false }
+                        ProductoraScreen.PROFILE.route -> { currentScreen = ProductoraScreen.PROFILE }
                     }
                 }
             )
@@ -90,21 +92,21 @@ fun ProductoraMainScreen(
         Box(modifier = Modifier.padding(paddingValues)) {
             // Animated content switching
             AnimatedContent(
-                targetState = currentScreen,
+                targetState = Pair(currentScreen, showEditProfile),
                 transitionSpec = {
                     fadeIn(animationSpec = tween(300)) +
                             slideInHorizontally(
                                 animationSpec = tween(300),
-                                initialOffsetX = { if (targetState.ordinal > initialState.ordinal) 300 else -300 }
+                                initialOffsetX = { 300 }
                             ) togetherWith
                             fadeOut(animationSpec = tween(300)) +
                             slideOutHorizontally(
                                 animationSpec = tween(300),
-                                targetOffsetX = { if (targetState.ordinal > initialState.ordinal) -300 else 300 }
+                                targetOffsetX = { -300 }
                             )
                 },
                 label = "screenTransition"
-            ) { screen ->
+            ) { (screen, editing) ->
                 when (screen) {
                     ProductoraScreen.HOME -> {
                         EventsMainScreen(
@@ -112,7 +114,8 @@ fun ProductoraMainScreen(
                             onLogout = onLogout,
                             onAddEvent = onAddEvent,
                             onProfile = onProfile,
-                            showOnlyList = true
+                            showOnlyList = true,
+                            onEventClick = onEventClick
                         )
                     }
                     ProductoraScreen.SEARCH -> {
@@ -122,9 +125,17 @@ fun ProductoraMainScreen(
                         ChatPlaceholderScreen()
                     }
                     ProductoraScreen.PROFILE -> {
-                        ProductoraProfilePlaceholderScreen(
-                            onNavigateBack = { currentScreen = ProductoraScreen.HOME }
-                        )
+                        if (editing) {
+                            com.example.djeventhub.ui.productora.profile.EditProductoraProfileScreen(
+                                onNavigateBack = { showEditProfile = false }
+                            )
+                        } else {
+                            com.example.djeventhub.ui.productora.profile.ProductoraProfileScreen(
+                                onNavigateBack = { currentScreen = ProductoraScreen.HOME },
+                                onEdit = { showEditProfile = true },
+                                showTopBar = true
+                            )
+                        }
                     }
                     else -> {
                         // Fallback

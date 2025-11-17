@@ -8,13 +8,15 @@ fun DJHomeScreen(
     viewModel: EventListViewModel,
     onLogout: () -> Unit,
     onAddEvent: () -> Unit,
-    onProfile: () -> Unit
+    onProfile: () -> Unit,
+    onEventClick: (String) -> Unit = {}
 ) {
     // Use the new Instagram-style navigation
     DJMainScreen(
         viewModel = viewModel,
         onLogout = onLogout,
         onAddEvent = onAddEvent,
-        onProfile = onProfile
+        onProfile = onProfile,
+        onEventClick = onEventClick
     )
 }

@@ -16,7 +16,8 @@ fun ProductoraHomeScreen(
     onLogout: () -> Unit,
     onSearchDJs: () -> Unit,
     onProfile: () -> Unit,
-    onAddEvent: () -> Unit
+    onAddEvent: () -> Unit,
+    onEventClick: (String) -> Unit = {}
 ) {
     // Use the new Instagram-style navigation
     ProductoraMainScreen(
@@ -24,7 +25,8 @@ fun ProductoraHomeScreen(
         onLogout = onLogout,
         onProfile = onProfile,
         onSearchDJs = onSearchDJs,
-        onAddEvent = onAddEvent
+        onAddEvent = onAddEvent,
+        onEventClick = onEventClick
     )
 }
 

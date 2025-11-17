@@ -22,7 +22,8 @@ fun EventsMainScreen(
     onAddEvent: () -> Unit,
     onProfile: (() -> Unit)? = null,
     showOnlyList: Boolean = false,
-    showOnlyMap: Boolean = false
+    showOnlyMap: Boolean = false,
+    onEventClick: (String) -> Unit = {}
 ) {
     var selectedTab by remember {
         mutableStateOf(
@@ -74,7 +75,8 @@ fun EventsMainScreen(
                         viewModel = viewModel,
                         onLogout = onLogout,
                         onAddEvent = onAddEvent,
-                        onProfile = onProfile
+                        onProfile = onProfile,
+                        onEventClick = onEventClick
                     )
                 }
                 EventsTab.MAP -> {
