@@ -7,13 +7,24 @@
 **Lenguaje:** Kotlin
 **Framework UI:** Jetpack Compose
 **Package:** com.example.djeventhub
-**Versión:** 1.0 (versionCode 1)
+**Versión:** 2.0 (versionCode 1)
+**Última Actualización:** Noviembre 2025
 
 ---
 
 ## Descripción del Proyecto
 
-DJEventHub es una aplicación Android moderna desarrollada con Jetpack Compose que proporciona funcionalidades de autenticación de usuarios utilizando Firebase Authentication, con soporte para inicio de sesión por correo electrónico/contraseña y Google Sign-In.
+DJEventHub es una aplicación Android moderna desarrollada con Jetpack Compose que conecta DJs con productoras de eventos. La aplicación proporciona:
+
+- **Autenticación robusta** con Firebase (Email/Password y Google Sign-In)
+- **Sistema de roles** diferenciados (DJ y Productora) con navegación personalizada
+- **Gestión de eventos** con lista y vista de mapa interactivo
+- **Perfiles de usuario** con información detallada, géneros musicales, disponibilidad y calificaciones
+- **Sistema de chat** para comunicación entre DJs y productoras
+- **Navegación estilo Instagram** con barra inferior profesional y animaciones fluidas
+- **Integración de Google Maps** para visualizar eventos cercanos
+- **Animaciones profesionales** en toda la aplicación
+- **Geolocalización** para ordenar eventos por proximidad
 
 ---
 
@@ -41,10 +52,23 @@ DJEventHub es una aplicación Android moderna desarrollada con Jetpack Compose q
 **Firebase**
 - firebase-bom:32.2.0
 - firebase-auth-ktx
+- firebase-firestore-ktx
+- firebase-storage-ktx
 
 **Google Services**
 - play-services-auth:20.7.0 (Google Sign-In)
 - play-services-location:21.0.1
+- play-services-maps:18.2.0
+
+**Google Maps Compose**
+- maps-compose:4.3.0
+- maps-compose-utils:4.3.0
+
+**Accompanist (Permisos)**
+- accompanist-permissions:0.30.1
+
+**Coil (Carga de imágenes)**
+- coil-compose:2.4.0
 
 **Networking**
 - Retrofit:2.9.0
@@ -82,10 +106,46 @@ DJEventHub/
 │   │   │   │   │   ├── auth/
 │   │   │   │   │   │   ├── AuthViewModel.kt
 │   │   │   │   │   │   └── LoginScreen.kt
+│   │   │   │   │   ├── roleselection/
+│   │   │   │   │   │   └── RoleSelectionScreen.kt
+│   │   │   │   │   ├── dj/
+│   │   │   │   │   │   ├── DJMainScreen.kt
+│   │   │   │   │   │   └── profile/
+│   │   │   │   │   │       ├── DJProfileScreen.kt
+│   │   │   │   │   │       └── DJProfileViewModel.kt
+│   │   │   │   │   ├── productora/
+│   │   │   │   │   │   ├── ProductoraMainScreen.kt
+│   │   │   │   │   │   └── ProductoraHomeScreen.kt
+│   │   │   │   │   ├── events/
+│   │   │   │   │   │   └── EventsMainScreen.kt
+│   │   │   │   │   ├── map/
+│   │   │   │   │   │   └── MapScreen.kt
+│   │   │   │   │   ├── chat/
+│   │   │   │   │   │   ├── ChatListScreen.kt
+│   │   │   │   │   │   └── ChatListViewModel.kt
+│   │   │   │   │   ├── navigation/
+│   │   │   │   │   │   ├── AppNavigation.kt
+│   │   │   │   │   │   └── InstagramBottomBar.kt
+│   │   │   │   │   ├── animations/
+│   │   │   │   │   │   └── AnimationUtils.kt
+│   │   │   │   │   ├── components/
+│   │   │   │   │   │   └── LoadingComponents.kt
+│   │   │   │   │   ├── addevent/
+│   │   │   │   │   │   └── AddEventScreen.kt
 │   │   │   │   │   └── theme/
 │   │   │   │   │       ├── Color.kt
 │   │   │   │   │       ├── Theme.kt
 │   │   │   │   │       └── Type.kt
+│   │   │   │   ├── models/
+│   │   │   │   │   ├── User.kt
+│   │   │   │   │   ├── UserRole.kt
+│   │   │   │   │   ├── Chat.kt
+│   │   │   │   │   └── Message.kt
+│   │   │   │   ├── data/
+│   │   │   │   │   ├── UserRepository.kt
+│   │   │   │   │   └── ChatRepository.kt
+│   │   │   │   ├── location/
+│   │   │   │   │   └── LocationManager.kt
 │   │   │   │   ├── MainActivity.kt
 │   │   │   │   ├── Event.kt
 │   │   │   │   ├── EventRepository.kt
@@ -93,16 +153,22 @@ DJEventHub/
 │   │   │   │   ├── EventListViewModel.kt
 │   │   │   │   ├── ApiService.kt
 │   │   │   │   ├── CameraHandler.kt
-│   │   │   │   ├── LocationProvider.kt
-│   │   │   │   ├── GoogleSignInHelper.kt
-│   │   │   │   ├── AuthRepository.kt
-│   │   │   │   └── AuthScreen.kt
+│   │   │   │   └── LocationProvider.kt
 │   │   │   ├── res/
+│   │   │   │   ├── drawable/
+│   │   │   │   │   └── logo.png
+│   │   │   │   ├── xml/
+│   │   │   │   │   └── file_paths.xml
+│   │   │   │   ├── mipmap-*/
+│   │   │   │   └── values/
 │   │   │   └── AndroidManifest.xml
 │   │   ├── test/
 │   │   └── androidTest/
 │   ├── build.gradle.kts
 │   └── google-services.json
+├── DOCUMENTACION_PROYECTO.md
+├── CONFIGURACION_FIREBASE.md
+├── README.md
 └── build.gradle.kts
 ```
 
@@ -359,22 +425,102 @@ Si error: Estado → Error(message)
 ### Autenticación
 - ✅ Login con email y contraseña
 - ✅ Registro con email y contraseña
-- ✅ Google Sign-In
+- ✅ Google Sign-In con manejo de tokens
+- ✅ Persistencia de sesión (auto-login)
+- ✅ Logout completo
 - ✅ Gestión de estados (Loading, Error, Authenticated)
-- ✅ Manejo de errores
+- ✅ Manejo de errores con mensajes descriptivos
+- ✅ Overlay de carga sin afectar el layout
+
+### Sistema de Roles
+- ✅ Selección de rol (DJ o Productora) después del registro
+- ✅ Navegación personalizada según rol
+- ✅ Pantalla RoleSelectionScreen con diseño profesional
+- ✅ Guardado de rol en Firestore
+
+### Navegación
+- ✅ Navegación estilo Instagram con barra inferior
+- ✅ 5 pestañas para cada rol (Inicio, Mapa/Búsqueda, Agregar, Chat, Perfil)
+- ✅ FAB central con gradiente y animación de pulso
+- ✅ Transiciones animadas entre pantallas
+- ✅ Glow effect en íconos seleccionados
+- ✅ InstagramBottomBar reutilizable
+
+### Gestión de Eventos
+- ✅ Lista de eventos con scroll
+- ✅ Vista de mapa interactivo con Google Maps
+- ✅ Tabs para alternar entre Lista y Mapa
+- ✅ Marcadores de eventos en el mapa
+- ✅ Cálculo de distancia con fórmula Haversine
+- ✅ Ordenamiento de eventos por proximidad
+- ✅ Botón para abrir en Google Maps
+- ✅ Refresh para actualizar ubicación
+
+### Perfiles de Usuario
+- ✅ Perfil de DJ con información completa
+- ✅ Avatar con gradiente neon
+- ✅ Carga de foto de perfil desde galería
+- ✅ Sistema de calificaciones con estrellas animadas
+- ✅ Géneros musicales con chips de colores
+- ✅ Días de disponibilidad
+- ✅ Estadísticas de eventos completados
+- ✅ Información de contacto (teléfono, ubicación)
+- ✅ Biografía personalizada
+
+### Chat (En desarrollo)
+- ✅ Pantalla de lista de chats
+- ✅ Repositorio de chats con Firestore
+- ✅ Modelo de datos para Chat y Message
+- ✅ UI placeholder para próximas funcionalidades
+
+### Animaciones
+- ✅ Sistema centralizado de animaciones (AnimationUtils.kt)
+- ✅ Bounce click para elementos interactivos
+- ✅ Fade in con delay para entradas escalonadas
+- ✅ Pulse animation para elementos destacados
+- ✅ Shimmer effect para placeholders
+- ✅ Slide transitions para navegación
+- ✅ Spring animations para calificaciones
+- ✅ NeonLoadingIndicator con glow effect
+- ✅ Animaciones de aparición en listas
+
+### Google Maps
+- ✅ Integración completa de Google Maps
+- ✅ Marcadores de eventos
+- ✅ Bottom sheet con información del evento
+- ✅ Botón de ubicación actual
+- ✅ Permisos de ubicación con Accompanist
+- ✅ Diálogo explicativo si se deniegan permisos
+- ✅ MapScreen con cámara animada
+- ✅ Clustering de marcadores cercanos
+
+### Geolocalización
+- ✅ LocationManager personalizado
+- ✅ FusedLocationProviderClient
+- ✅ Solicitud de permisos en runtime
+- ✅ Obtención de ubicación actual
+- ✅ Actualización automática de distancias
+- ✅ Soporte para emuladores (ubicación mock)
 
 ### UI/UX
 - ✅ Interfaz moderna con Material3
+- ✅ Tema oscuro con colores neon (NeonPink, NeonPurple, ElectricBlue)
 - ✅ Edge-to-Edge display
-- ✅ Indicadores de carga (CircularProgressIndicator)
-- ✅ Mensajes de error (Snackbar)
-- ✅ Campos de texto con OutlinedTextField
+- ✅ Cards con gradientes y efectos de glow
+- ✅ Loading states con indicadores profesionales
+- ✅ Mensajes de error con Snackbar
+- ✅ Validación de formularios
+- ✅ Responsive design
+- ✅ Logo personalizado de la app
 
 ### Arquitectura
 - ✅ Patrón MVVM (Model-View-ViewModel)
+- ✅ Repository pattern para datos
 - ✅ StateFlow para gestión de estados reactivos
 - ✅ Coroutines para operaciones asíncronas
-- ✅ Separación de concerns (UI, ViewModel, Repository)
+- ✅ Separación de concerns (UI, ViewModel, Repository, Data)
+- ✅ Navegación con Navigation Compose
+- ✅ Inyección manual de dependencias
 
 ---
 
@@ -451,43 +597,64 @@ Aunque no están completamente implementados en la autenticación actual, el pro
 ## Próximos Pasos Sugeridos
 
 ### 1. Funcionalidades de Autenticación
+- [x] ~~Implementar persistencia de sesión~~ ✅ Completado
 - [ ] Implementar recuperación de contraseña
 - [ ] Implementar verificación de email
 - [ ] Agregar autenticación biométrica
-- [ ] Implementar persistencia de sesión
 
 ### 2. Gestión de Eventos
-- [ ] Completar implementación de EventListScreen
-- [ ] Integrar con API backend
-- [ ] Implementar creación de eventos
-- [ ] Implementar detalles de eventos
+- [x] ~~Completar implementación de EventListScreen~~ ✅ Completado
+- [x] ~~Implementar vista de mapa~~ ✅ Completado
+- [x] ~~Mostrar eventos cercanos~~ ✅ Completado
+- [ ] **[PRIORIDAD]** Arreglar botones de crear evento (actualmente no funcionan)
+- [ ] **[PRIORIDAD]** Implementar AddEventScreen con mapa integrado
+- [ ] **[PRIORIDAD]** Agregar autocomplete de direcciones con Google Places
+- [ ] Implementar selector de ubicación en mapa para crear eventos
+- [ ] Implementar detalles de eventos (pantalla de detalle)
+- [ ] Integrar con API backend (cuando esté disponible)
 
-### 3. Funcionalidades de Cámara
-- [ ] Implementar captura de fotos para eventos
-- [ ] Integrar con galería
-- [ ] Implementar subida de imágenes
+### 3. Chat y Mensajería
+- [x] ~~Estructura básica de chat~~ ✅ Completado
+- [ ] Implementar chat en tiempo real con Firestore
+- [ ] Notificaciones de mensajes nuevos
+- [ ] Pantalla de conversación individual
+- [ ] Envío de imágenes en chat
 
-### 4. Ubicación
-- [ ] Implementar servicios de ubicación
-- [ ] Integrar Google Maps
-- [ ] Mostrar eventos cercanos
+### 4. Funcionalidades de Productora
+- [ ] Pantalla de búsqueda de DJs funcional
+- [ ] Filtros de búsqueda (género, ubicación, disponibilidad)
+- [ ] Sistema de contratación/invitación a eventos
+- [ ] Perfil de productora completo
 
 ### 5. UI/UX
-- [ ] Implementar navegación completa con Navigation Compose
-- [ ] Mejorar diseño visual
-- [ ] Agregar animaciones
-- [ ] Implementar tema oscuro
+- [x] ~~Implementar navegación completa con Navigation Compose~~ ✅ Completado
+- [x] ~~Mejorar diseño visual~~ ✅ Completado
+- [x] ~~Agregar animaciones~~ ✅ Completado
+- [x] ~~Implementar tema oscuro~~ ✅ Completado
+- [ ] **[PRIORIDAD]** Reducir altura de la TopBar (muy gruesa actualmente)
+- [ ] Mejorar responsive design para tablets
+- [ ] Agregar splash screen animada
 
 ### 6. Testing
 - [ ] Escribir tests unitarios para ViewModels
 - [ ] Escribir tests de UI con Compose Test
 - [ ] Implementar tests de integración
+- [ ] Tests de permisos de ubicación
 
 ### 7. Optimización
 - [ ] Implementar inyección de dependencias con Hilt
-- [ ] Optimizar rendimiento
-- [ ] Implementar caché de datos
-- [ ] Agregar manejo offline
+- [ ] Optimizar rendimiento del mapa
+- [ ] Implementar caché de datos con Room
+- [ ] Agregar manejo offline con sincronización
+- [ ] Optimizar carga de imágenes
+
+### 8. Funcionalidades Avanzadas
+- [ ] Sistema de calificaciones y reviews
+- [ ] Galería de fotos para perfiles y eventos
+- [ ] Compartir eventos en redes sociales
+- [ ] Notificaciones push con Firebase Cloud Messaging
+- [ ] Estadísticas y analytics para productoras
+- [ ] Sistema de favoritos para DJs
 
 ---
 
@@ -561,13 +728,52 @@ El proyecto usa StateFlow en lugar de LiveData porque:
 
 ## Changelog
 
-### Version 1.0 (Actual)
+### Version 2.0 (Actual - Noviembre 2025)
+- ✅ Sistema completo de roles (DJ y Productora) con navegación personalizada
+- ✅ Navegación estilo Instagram con barra inferior profesional y FAB central
+- ✅ Integración completa de Google Maps con marcadores y ubicación
+- ✅ Sistema de animaciones profesionales (bounce, fade, pulse, shimmer)
+- ✅ Perfiles de usuario completos con fotos, calificaciones y géneros
+- ✅ Sistema de chat básico (estructura y UI)
+- ✅ Geolocalización con cálculo de distancias y ordenamiento
+- ✅ Vista de eventos en lista y mapa
+- ✅ Tema oscuro con colores neon (NeonPink, NeonPurple, ElectricBlue)
+- ✅ Persistencia de sesión con auto-login
+- ✅ Manejo de permisos de ubicación con Accompanist
+- ✅ Loading states mejorados con NeonLoadingIndicator
+- ✅ Transiciones animadas entre pantallas
+- ✅ Carga de fotos de perfil desde galería
+- 🚧 AddEventScreen (pendiente)
+- 🚧 Autocomplete de direcciones con Google Places (pendiente)
+- 🚧 Reducir altura de TopBar (pendiente)
+
+### Version 1.0 (Septiembre 2025)
 - Implementación inicial de autenticación con Firebase
 - Login con email/contraseña
 - Registro de usuarios
 - Google Sign-In
 - Interfaz básica con Jetpack Compose
 - Estructura del proyecto establecida
+- EventListScreen básico
+- LocationManager para GPS
+
+---
+
+## Problemas Conocidos
+
+### Alta Prioridad
+1. **Botones de crear evento no funcionan** - Los dos botones en la interfaz (uno en EventListScreen y otro en la navegación) no tienen funcionalidad implementada
+2. **TopBar muy gruesa** - La barra superior tiene demasiada altura y necesita ajuste
+3. **AddEventScreen no implementada** - Falta la pantalla para crear eventos con mapa y autocomplete
+
+### Media Prioridad
+1. Chat solo tiene placeholders - Funcionalidad de mensajería no implementada
+2. Búsqueda de DJs no funcional - Solo muestra placeholder
+3. Perfil de productora incompleto - Solo tiene pantalla placeholder
+
+### Baja Prioridad
+1. Algunas animaciones pueden optimizarse para mejor rendimiento
+2. Falta manejo offline completo
 
 ---
 

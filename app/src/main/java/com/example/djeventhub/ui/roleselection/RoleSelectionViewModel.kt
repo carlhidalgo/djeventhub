@@ -5,9 +5,11 @@ import androidx.lifecycle.viewModelScope
 import com.example.djeventhub.data.UserRepository
 import com.example.djeventhub.models.UserType
 import com.google.firebase.auth.FirebaseAuth
+import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.launch
+import javax.inject.Inject
 
 sealed class RoleSelectionUiState {
     object Idle : RoleSelectionUiState()
@@ -16,9 +18,11 @@ sealed class RoleSelectionUiState {
     data class Error(val message: String) : RoleSelectionUiState()
 }
 
-class RoleSelectionViewModel : ViewModel() {
-    private val userRepository = UserRepository()
-    private val auth = FirebaseAuth.getInstance()
+@HiltViewModel
+class RoleSelectionViewModel @Inject constructor(
+    private val userRepository: UserRepository,
+    private val auth: FirebaseAuth
+) : ViewModel() {
 
     private val _uiState = MutableStateFlow<RoleSelectionUiState>(RoleSelectionUiState.Idle)
     val uiState: StateFlow<RoleSelectionUiState> = _uiState

@@ -21,7 +21,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
-import androidx.lifecycle.viewmodel.compose.viewModel
+import androidx.hilt.navigation.compose.hiltViewModel
 import coil.compose.AsyncImage
 import com.example.djeventhub.models.MusicGenres
 import com.example.djeventhub.models.WeekDays
@@ -31,10 +31,11 @@ import com.example.djeventhub.ui.theme.*
 @Composable
 fun EditDJProfileScreen(
     onNavigateBack: () -> Unit,
-    viewModel: DJProfileViewModel = viewModel()
+    viewModel: DJProfileViewModel = hiltViewModel()
 ) {
     val uiState by viewModel.uiState.collectAsState()
     val snackbarHostState = remember { SnackbarHostState() }
+    val message by viewModel.message.collectAsState()
 
     // Form state
     var artistName by remember { mutableStateOf("") }
@@ -73,6 +74,34 @@ fun EditDJProfileScreen(
         lastState = uiState
     }
 
+    // Validations
+    val artistNameError = remember(artistName) {
+        when {
+            artistName.isBlank() -> "Requerido"
+            artistName.length < 2 -> "Mínimo 2 caracteres"
+            artistName.length > 40 -> "Máximo 40"
+            else -> null
+        }
+    }
+    val bioError = remember(bio) {
+        if (bio.length > 300) "Máximo 300 caracteres" else null
+    }
+    val phoneError = remember(phone) {
+        if (phone.isNotBlank() && !phone.matches("^[+0-9]{7,15}$".toRegex())) "Teléfono inválido" else null
+    }
+    val locationError = remember(location) {
+        if (location.length > 60) "Máximo 60" else null
+    }
+    val isFormValid = artistNameError == null && bioError == null && phoneError == null && locationError == null
+
+    // Show snackbars for messages
+    LaunchedEffect(message) {
+        if (message != null) {
+            snackbarHostState.showSnackbar(message!!)
+            viewModel.consumeMessage()
+        }
+    }
+
     Scaffold(
         topBar = {
             TopAppBar(
@@ -85,19 +114,21 @@ fun EditDJProfileScreen(
                 actions = {
                     IconButton(
                         onClick = {
-                            saveRequested = true
-                            viewModel.updateProfile(
-                                artistName = artistName,
-                                bio = bio,
-                                musicGenres = selectedGenres.toList(),
-                                availableDays = selectedDays.toList(),
-                                phone = phone.ifBlank { null },
-                                location = location.ifBlank { null }
-                            )
+                            if (isFormValid) {
+                                saveRequested = true
+                                viewModel.updateProfile(
+                                    artistName = artistName,
+                                    bio = bio,
+                                    musicGenres = selectedGenres.toList(),
+                                    availableDays = selectedDays.toList(),
+                                    phone = phone.ifBlank { null },
+                                    location = location.ifBlank { null }
+                                )
+                            }
                         },
-                        enabled = uiState !is DJProfileUiState.Loading
+                        enabled = uiState !is DJProfileUiState.Loading && isFormValid
                     ) {
-                        Icon(Icons.Default.Check, contentDescription = "Guardar", tint = NeonPink)
+                        Icon(Icons.Default.Check, contentDescription = "Guardar", tint = if (isFormValid) NeonPink else TextSecondary)
                     }
                 },
                 colors = TopAppBarDefaults.topAppBarColors(containerColor = DeepBlack)
@@ -198,6 +229,8 @@ fun EditDJProfileScreen(
                 value = artistName,
                 onValueChange = { artistName = it },
                 label = { Text("Nombre Artístico") },
+                supportingText = { if (artistNameError != null) Text(artistNameError, color = ErrorRed) },
+                isError = artistNameError != null,
                 modifier = Modifier.fillMaxWidth(),
                 colors = OutlinedTextFieldDefaults.colors(
                     focusedBorderColor = NeonPink,
@@ -214,6 +247,8 @@ fun EditDJProfileScreen(
                 value = bio,
                 onValueChange = { bio = it },
                 label = { Text("Biografía") },
+                supportingText = { if (bioError != null) Text(bioError, color = ErrorRed) else Text("${bio.length}/300") },
+                isError = bioError != null,
                 modifier = Modifier
                     .fillMaxWidth()
                     .height(120.dp),
@@ -316,6 +351,8 @@ fun EditDJProfileScreen(
                 value = phone,
                 onValueChange = { phone = it },
                 label = { Text("Teléfono (opcional)") },
+                supportingText = { if (phoneError != null) Text(phoneError, color = ErrorRed) },
+                isError = phoneError != null,
                 modifier = Modifier.fillMaxWidth(),
                 colors = OutlinedTextFieldDefaults.colors(
                     focusedBorderColor = NeonOrange,
@@ -331,6 +368,8 @@ fun EditDJProfileScreen(
                 value = location,
                 onValueChange = { location = it },
                 label = { Text("Ubicación (opcional)") },
+                supportingText = { if (locationError != null) Text(locationError, color = ErrorRed) },
+                isError = locationError != null,
                 modifier = Modifier.fillMaxWidth(),
                 colors = OutlinedTextFieldDefaults.colors(
                     focusedBorderColor = NeonOrange,

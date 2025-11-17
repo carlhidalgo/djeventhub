@@ -21,12 +21,11 @@ import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
-import androidx.compose.ui.draw.rotate
 import androidx.compose.ui.draw.scale
 import androidx.compose.ui.graphics.graphicsLayer
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
-import androidx.lifecycle.viewmodel.compose.viewModel
+import androidx.hilt.navigation.compose.hiltViewModel
 import coil.compose.AsyncImage
 import com.example.djeventhub.models.User
 import com.example.djeventhub.ui.animations.*
@@ -37,7 +36,7 @@ import com.example.djeventhub.ui.theme.*
 fun DJProfileScreen(
     onNavigateBack: () -> Unit,
     onEdit: () -> Unit,
-    viewModel: DJProfileViewModel = viewModel(),
+    viewModel: DJProfileViewModel = hiltViewModel(),
     showTopBar: Boolean = true
 ) {
     val uiState by viewModel.uiState.collectAsState()
@@ -51,22 +50,37 @@ fun DJProfileScreen(
         topBar = {
             if (showTopBar) {
                 TopAppBar(
-                    title = { Text("Mi Perfil DJ") },
+                    title = {
+                        Text(
+                            "Mi Perfil DJ",
+                            style = MaterialTheme.typography.titleMedium
+                        )
+                    },
                     navigationIcon = {
                         IconButton(onClick = onNavigateBack) {
-                            Icon(Icons.AutoMirrored.Filled.ArrowBack, contentDescription = "Volver")
+                            Icon(
+                                Icons.AutoMirrored.Filled.ArrowBack,
+                                contentDescription = "Volver",
+                                modifier = Modifier.size(20.dp)
+                            )
                         }
                     },
                     actions = {
                         if (uiState is DJProfileUiState.Success) {
                             IconButton(onClick = onEdit) {
-                                Icon(Icons.Default.Edit, contentDescription = "Editar", tint = NeonPink)
+                                Icon(
+                                    Icons.Default.Edit,
+                                    contentDescription = "Editar",
+                                    tint = NeonPink,
+                                    modifier = Modifier.size(20.dp)
+                                )
                             }
                         }
                     },
                     colors = TopAppBarDefaults.topAppBarColors(
                         containerColor = DeepBlack
-                    )
+                    ),
+                    modifier = Modifier.height(48.dp)
                 )
             }
         },
@@ -127,39 +141,47 @@ fun DJProfileContent(user: User, onPickImage: () -> Unit, modifier: Modifier = M
 
         Spacer(modifier = Modifier.height(24.dp))
 
-        // Rating section - animated with delay
+        // Rating section - always show even if 0
         Box(modifier = Modifier.fadeInWithDelay(100)) {
             RatingSection(rating = user.rating, totalRatings = user.totalRatings)
         }
 
         Spacer(modifier = Modifier.height(24.dp))
 
-        // Bio section
+        // Bio section - show placeholder if empty
         if (!user.bio.isNullOrBlank()) {
             InfoCard(title = "Biografía", content = user.bio)
-            Spacer(modifier = Modifier.height(16.dp))
+        } else {
+            PlaceholderCard(title = "Biografía", message = "Añade una biografía desde Editar")
         }
+        Spacer(modifier = Modifier.height(16.dp))
 
-        // Music genres
+        // Music genres - show placeholder if empty
         if (user.musicGenres.isNotEmpty()) {
             MusicGenresCard(genres = user.musicGenres)
-            Spacer(modifier = Modifier.height(16.dp))
+        } else {
+            PlaceholderCard(title = "Géneros Musicales", message = "Selecciona tus géneros desde Editar")
         }
+        Spacer(modifier = Modifier.height(16.dp))
 
-        // Availability
+        // Availability - show placeholder if empty
         if (user.availableDays.isNotEmpty()) {
             AvailabilityCard(days = user.availableDays)
-            Spacer(modifier = Modifier.height(16.dp))
+        } else {
+            PlaceholderCard(title = "Disponibilidad", message = "Indica tus días disponibles desde Editar")
         }
+        Spacer(modifier = Modifier.height(16.dp))
 
-        // Stats
+        // Stats - always show
         StatsCard(eventsCompleted = user.eventsCompleted)
 
         Spacer(modifier = Modifier.height(16.dp))
 
-        // Contact info
+        // Contact info - show placeholder if empty
         if (!user.phone.isNullOrBlank() || !user.location.isNullOrBlank()) {
             ContactCard(phone = user.phone, location = user.location)
+        } else {
+            PlaceholderCard(title = "Contacto", message = "Añade tu teléfono y ubicación desde Editar")
         }
     }
 }
@@ -492,6 +514,31 @@ fun ContactCard(phone: String?, location: String?) {
                     color = TextPrimary
                 )
             }
+        }
+    }
+}
+
+@Composable
+fun PlaceholderCard(title: String, message: String) {
+    Card(
+        modifier = Modifier.fillMaxWidth(),
+        shape = RoundedCornerShape(16.dp),
+        colors = CardDefaults.cardColors(containerColor = DarkSurface.copy(alpha = 0.5f))
+    ) {
+        Column(modifier = Modifier.padding(20.dp)) {
+            Text(
+                text = title,
+                style = MaterialTheme.typography.titleMedium,
+                color = TextSecondary,
+                fontWeight = FontWeight.Bold
+            )
+            Spacer(modifier = Modifier.height(8.dp))
+            Text(
+                text = message,
+                style = MaterialTheme.typography.bodyMedium,
+                color = TextTertiary,
+                fontStyle = androidx.compose.ui.text.font.FontStyle.Italic
+            )
         }
     }
 }

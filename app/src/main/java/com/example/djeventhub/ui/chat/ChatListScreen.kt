@@ -1,5 +1,10 @@
 package com.example.djeventhub.ui.chat
 
+import androidx.compose.animation.core.animateFloat
+import androidx.compose.animation.core.infiniteRepeatable
+import androidx.compose.animation.core.rememberInfiniteTransition
+import androidx.compose.animation.core.RepeatMode
+import androidx.compose.animation.core.tween
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
@@ -9,7 +14,6 @@ import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
-import androidx.compose.material.icons.filled.Email
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
@@ -18,7 +22,7 @@ import androidx.compose.ui.draw.clip
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
-import androidx.lifecycle.viewmodel.compose.viewModel
+import androidx.hilt.navigation.compose.hiltViewModel
 import coil.compose.AsyncImage
 import com.example.djeventhub.models.Chat
 import com.example.djeventhub.ui.theme.*
@@ -30,9 +34,10 @@ import java.util.*
 fun ChatListScreen(
     onNavigateBack: () -> Unit,
     onChatClick: (String) -> Unit,
-    viewModel: ChatListViewModel = viewModel()
+    viewModel: ChatListViewModel = hiltViewModel()
 ) {
     val uiState by viewModel.uiState.collectAsState()
+    var searchQuery by remember { mutableStateOf("") }
 
     Scaffold(
         topBar = {
@@ -41,6 +46,20 @@ fun ChatListScreen(
                 navigationIcon = {
                     IconButton(onClick = onNavigateBack) {
                         Icon(Icons.AutoMirrored.Filled.ArrowBack, contentDescription = "Volver")
+                    }
+                },
+                actions = {
+                    if (uiState is ChatListUiState.Success) {
+                        val total = (uiState as ChatListUiState.Success).totalUnreadCount
+                        if (total > 0) {
+                            AssistChip(
+                                onClick = {},
+                                label = { Text("$total sin leer") },
+                                colors = AssistChipDefaults.assistChipColors(
+                                    containerColor = NeonPink.copy(alpha = 0.2f)
+                                )
+                            )
+                        }
                     }
                 },
                 colors = TopAppBarDefaults.topAppBarColors(
@@ -52,16 +71,17 @@ fun ChatListScreen(
     ) { padding ->
         when (val state = uiState) {
             is ChatListUiState.Loading -> {
-                Box(
+                // Shimmer placeholders
+                LazyColumn(
                     modifier = Modifier
                         .fillMaxSize()
-                        .padding(padding),
-                    contentAlignment = Alignment.Center
+                        .padding(padding)
                 ) {
-                    CircularProgressIndicator(color = NeonPink)
+                    items(6) {
+                        ShimmerChatItem()
+                    }
                 }
             }
-
             is ChatListUiState.Error -> {
                 Box(
                     modifier = Modifier
@@ -87,41 +107,60 @@ fun ChatListScreen(
                     }
                 }
             }
-
             is ChatListUiState.Success -> {
-                if (state.chats.isEmpty()) {
-                    Box(
+                val filtered = if (searchQuery.isBlank()) state.chats else state.chats.filter { chat ->
+                    val currentUserId = com.google.firebase.auth.FirebaseAuth.getInstance().currentUser?.uid ?: ""
+                    chat.getOtherParticipantName(currentUserId).contains(searchQuery, ignoreCase = true)
+                }
+                Column(
+                    modifier = Modifier
+                        .fillMaxSize()
+                        .padding(padding)
+                ) {
+                    // Search bar
+                    OutlinedTextField(
+                        value = searchQuery,
+                        onValueChange = { searchQuery = it },
+                        label = { Text("Buscar") },
+                        singleLine = true,
                         modifier = Modifier
-                            .fillMaxSize()
-                            .padding(padding),
-                        contentAlignment = Alignment.Center
-                    ) {
-                        Column(horizontalAlignment = Alignment.CenterHorizontally) {
-                            Icon(
-                                imageVector = Icons.Default.Email,
-                                contentDescription = null,
-                                modifier = Modifier.size(64.dp),
-                                tint = TextSecondary
-                            )
-                            Spacer(modifier = Modifier.height(16.dp))
+                            .fillMaxWidth()
+                            .padding(horizontal = 16.dp, vertical = 8.dp),
+                        colors = OutlinedTextFieldDefaults.colors(
+                            focusedBorderColor = NeonPink,
+                            focusedLabelColor = NeonPink,
+                            cursorColor = NeonPink
+                        )
+                    )
+
+                    // Refresh indicator (linear)
+                    if (state.isRefreshing) {
+                        LinearProgressIndicator(
+                            modifier = Modifier
+                                .fillMaxWidth()
+                                .padding(horizontal = 16.dp),
+                            color = NeonPink
+                        )
+                    }
+
+                    if (filtered.isEmpty()) {
+                        Box(
+                            modifier = Modifier.fillMaxSize(),
+                            contentAlignment = Alignment.Center
+                        ) {
                             Text(
-                                text = "No tienes conversaciones",
+                                text = if (searchQuery.isBlank()) "No tienes conversaciones" else "Sin resultados para '$searchQuery'",
                                 color = TextSecondary,
                                 style = MaterialTheme.typography.bodyLarge
                             )
                         }
-                    }
-                } else {
-                    LazyColumn(
-                        modifier = Modifier
-                            .fillMaxSize()
-                            .padding(padding)
-                    ) {
-                        items(state.chats) { chat ->
-                            ChatListItem(
-                                chat = chat,
-                                onClick = { onChatClick(chat.chatId) }
-                            )
+                    } else {
+                        LazyColumn(
+                            modifier = Modifier.fillMaxSize()
+                        ) {
+                            items(filtered) { chat ->
+                                ChatListItem(chat = chat, onClick = { onChatClick(chat.chatId) })
+                            }
                         }
                     }
                 }
@@ -278,6 +317,65 @@ fun ChatListItem(
             }
         }
     }
+}
+
+@Composable
+private fun ShimmerChatItem() {
+    Card(
+        modifier = Modifier
+            .fillMaxWidth()
+            .padding(horizontal = 16.dp, vertical = 8.dp),
+        shape = RoundedCornerShape(16.dp),
+        colors = CardDefaults.cardColors(containerColor = DarkSurface)
+    ) {
+        Row(
+            modifier = Modifier
+                .fillMaxWidth()
+                .padding(16.dp),
+            verticalAlignment = Alignment.CenterVertically
+        ) {
+            // Avatar shimmer
+            Box(
+                modifier = Modifier
+                    .size(48.dp)
+                    .clip(CircleShape)
+                    .shimmer()
+            )
+            Spacer(modifier = Modifier.width(16.dp))
+            Column(modifier = Modifier.weight(1f)) {
+                Box(
+                    modifier = Modifier
+                        .height(14.dp)
+                        .fillMaxWidth(0.5f)
+                        .clip(RoundedCornerShape(4.dp))
+                        .shimmer()
+                )
+                Spacer(modifier = Modifier.height(8.dp))
+                Box(
+                    modifier = Modifier
+                        .height(12.dp)
+                        .fillMaxWidth(0.8f)
+                        .clip(RoundedCornerShape(4.dp))
+                        .shimmer()
+                )
+            }
+        }
+    }
+}
+
+// Simple shimmer modifier using alpha animation
+@Composable
+private fun Modifier.shimmer(): Modifier {
+    val infiniteTransition = rememberInfiniteTransition()
+    val alphaAnim by infiniteTransition.animateFloat(
+        initialValue = 0.3f,
+        targetValue = 0.7f,
+        animationSpec = infiniteRepeatable(
+            animation = tween<Float>(800),
+            repeatMode = RepeatMode.Reverse
+        )
+    )
+    return this.background(DarkSurface.copy(alpha = alphaAnim))
 }
 
 private fun formatTimestamp(timestamp: Date): String {

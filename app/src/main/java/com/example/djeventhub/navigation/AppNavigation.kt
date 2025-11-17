@@ -1,13 +1,12 @@
 package com.example.djeventhub.navigation
 
 import androidx.compose.runtime.*
-import androidx.lifecycle.viewmodel.compose.viewModel
+import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.navigation.NavHostController
 import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
 import androidx.navigation.compose.rememberNavController
 import com.example.djeventhub.EventListViewModel
-import com.example.djeventhub.EventRepository
 import com.example.djeventhub.data.UserRepository
 import com.example.djeventhub.location.LocationManager
 import com.example.djeventhub.models.UserType
@@ -36,7 +35,7 @@ sealed class Screen(val route: String) {
 @Composable
 fun AppNavigation(
     navController: NavHostController = rememberNavController(),
-    authViewModel: AuthViewModel = viewModel(),
+    authViewModel: AuthViewModel = hiltViewModel(),
     locationManager: LocationManager
 ) {
     val userRepository = remember { UserRepository() }
@@ -111,9 +110,7 @@ fun AppNavigation(
         }
 
         composable(Screen.DJHome.route) {
-            val eventViewModel: EventListViewModel = viewModel(
-                factory = EventListViewModelFactory(EventRepository, locationManager)
-            )
+            val eventViewModel: EventListViewModel = hiltViewModel()
             DJHomeScreen(
                 viewModel = eventViewModel,
                 onLogout = {
@@ -132,9 +129,7 @@ fun AppNavigation(
         }
 
         composable(Screen.ProductoraHome.route) {
-            val eventViewModel: EventListViewModel = viewModel(
-                factory = EventListViewModelFactory(EventRepository, locationManager)
-            )
+            val eventViewModel: EventListViewModel = hiltViewModel()
             ProductoraHomeScreen(
                 eventViewModel = eventViewModel,
                 onLogout = {
@@ -148,6 +143,9 @@ fun AppNavigation(
                 },
                 onProfile = {
                     // TODO: Navigate to profile screen
+                },
+                onAddEvent = {
+                    navController.navigate(Screen.AddEvent.route)
                 }
             )
         }
@@ -214,19 +212,5 @@ fun AppNavigation(
                 }
             )
         }
-    }
-}
-
-// Simple factory for EventListViewModel
-class EventListViewModelFactory(
-    private val repository: EventRepository,
-    private val locationManager: LocationManager
-) : androidx.lifecycle.ViewModelProvider.Factory {
-    override fun <T : androidx.lifecycle.ViewModel> create(modelClass: Class<T>): T {
-        if (modelClass.isAssignableFrom(EventListViewModel::class.java)) {
-            @Suppress("UNCHECKED_CAST")
-            return EventListViewModel(repository, locationManager) as T
-        }
-        throw IllegalArgumentException("Unknown ViewModel class")
     }
 }

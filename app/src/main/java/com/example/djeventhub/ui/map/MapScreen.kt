@@ -7,6 +7,9 @@ import androidx.compose.animation.*
 import androidx.compose.animation.core.*
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.*
+import androidx.compose.foundation.layout.WindowInsets
+import androidx.compose.foundation.layout.statusBars
+import androidx.compose.foundation.layout.windowInsetsPadding
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.*
@@ -77,24 +80,43 @@ fun MapScreen(
 
     Scaffold(
         topBar = {
-            TopAppBar(
-                title = { Text("DJ Event Hub") },
-                actions = {
-                    if (onProfile != null) {
-                        IconButton(onClick = onProfile) {
-                            Icon(Icons.Default.Person, contentDescription = "Perfil")
+            Surface(
+                modifier = Modifier.fillMaxWidth(),
+                color = MaterialTheme.colorScheme.surface
+            ) {
+                Row(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .windowInsetsPadding(WindowInsets.statusBars)
+                        .height(40.dp)
+                        .padding(horizontal = 4.dp),
+                    horizontalArrangement = Arrangement.SpaceBetween,
+                    verticalAlignment = Alignment.CenterVertically
+                ) {
+                    Text(
+                        "DJ Event Hub",
+                        style = MaterialTheme.typography.bodyMedium,
+                        maxLines = 1,
+                        modifier = Modifier.padding(start = 8.dp)
+                    )
+                    Row {
+                        IconButton(
+                            onClick = { viewModel.refreshLocation() },
+                            modifier = Modifier.size(32.dp)
+                        ) {
+                            Icon(Icons.Default.Refresh, contentDescription = "Actualizar ubicación", modifier = Modifier.size(18.dp))
                         }
-                    }
-                    IconButton(onClick = { viewModel.refreshLocation() }) {
-                        Icon(Icons.Default.Refresh, contentDescription = "Actualizar ubicación")
-                    }
-                    if (onLogout != null) {
-                        IconButton(onClick = onLogout) {
-                            Icon(Icons.Default.ExitToApp, contentDescription = "Cerrar sesión")
+                        if (onLogout != null) {
+                            IconButton(
+                                onClick = onLogout,
+                                modifier = Modifier.size(32.dp)
+                            ) {
+                                Icon(Icons.Default.ExitToApp, contentDescription = "Cerrar sesión", modifier = Modifier.size(18.dp))
+                            }
                         }
                     }
                 }
-            )
+            }
         },
         floatingActionButton = {
             if (onAddEvent != null) {

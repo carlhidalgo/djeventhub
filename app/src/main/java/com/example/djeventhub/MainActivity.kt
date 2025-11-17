@@ -4,6 +4,7 @@ import android.Manifest
 import android.content.pm.PackageManager
 import android.os.Bundle
 import androidx.activity.ComponentActivity
+import androidx.activity.SystemBarStyle
 import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.compose.setContent
 import androidx.activity.enableEdgeToEdge
@@ -19,15 +20,38 @@ import androidx.core.content.ContextCompat
 import com.example.djeventhub.location.LocationManager
 import com.example.djeventhub.navigation.AppNavigation
 import com.example.djeventhub.ui.theme.DJEventHubTheme
+import com.google.android.libraries.places.api.Places
 import com.google.firebase.FirebaseApp
+import dagger.hilt.android.AndroidEntryPoint
 
+@AndroidEntryPoint
 class MainActivity : ComponentActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         // Initialize Firebase
         FirebaseApp.initializeApp(this)
 
-        enableEdgeToEdge()
+        // Initialize Places SDK
+        // TODO: Add your Maps API key to local.properties as MAPS_API_KEY=your_key_here
+        // The key is automatically loaded from BuildConfig or use a default for development
+        if (!Places.isInitialized()) {
+            try {
+                val apiKey = BuildConfig.MAPS_API_KEY.ifEmpty { "YOUR_API_KEY_HERE" }
+                Places.initialize(applicationContext, apiKey)
+            } catch (e: Exception) {
+                // Places will not work without a valid API key
+                android.util.Log.e("MainActivity", "Failed to initialize Places SDK: ${e.message}")
+            }
+        }
+
+        enableEdgeToEdge(
+            statusBarStyle = SystemBarStyle.dark(
+                scrim = android.graphics.Color.TRANSPARENT
+            ),
+            navigationBarStyle = SystemBarStyle.dark(
+                scrim = android.graphics.Color.TRANSPARENT
+            )
+        )
         setContent {
             DJEventHubTheme {
                 Surface(modifier = Modifier.fillMaxSize()) {

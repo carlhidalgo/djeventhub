@@ -6,10 +6,12 @@ import com.google.firebase.auth.AuthResult
 import com.google.firebase.auth.FirebaseAuth
 import com.google.firebase.auth.GoogleAuthProvider
 import com.google.android.gms.tasks.Task
+import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.suspendCancellableCoroutine
+import javax.inject.Inject
 import kotlin.coroutines.resume
 import kotlin.coroutines.resumeWithException
 
@@ -20,8 +22,10 @@ sealed class AuthUiState {
     data class Error(val message: String) : AuthUiState()
 }
 
-class AuthViewModel : ViewModel() {
-    private val auth: FirebaseAuth = FirebaseAuth.getInstance()
+@HiltViewModel
+class AuthViewModel @Inject constructor(
+    private val auth: FirebaseAuth
+) : ViewModel() {
 
     private val _uiState = MutableStateFlow<AuthUiState>(AuthUiState.Idle)
     val uiState: StateFlow<AuthUiState> = _uiState
@@ -60,6 +64,14 @@ class AuthViewModel : ViewModel() {
                 awaitTask(auth.createUserWithEmailAndPassword(email, password))
                 val user = auth.currentUser
                 if (user != null) {
+                    // Auto-create basic user profile in Firestore on sign-up
+                    val userRepo = com.example.djeventhub.data.UserRepository()
+                    userRepo.createUserProfile(
+                        uid = user.uid,
+                        email = user.email ?: "",
+                        userType = com.example.djeventhub.models.UserType.DJ, // Default to DJ, can change later
+                        displayName = user.email?.substringBefore("@") ?: "DJ"
+                    )
                     _uiState.value = AuthUiState.Authenticated(user.uid)
                 } else {
                     _uiState.value = AuthUiState.Error("No user after sign-up")
@@ -78,6 +90,17 @@ class AuthViewModel : ViewModel() {
                 awaitTask(auth.signInWithCredential(credential))
                 val user = auth.currentUser
                 if (user != null) {
+                    // Create profile if first time Google sign-in
+                    val userRepo = com.example.djeventhub.data.UserRepository()
+                    val existingProfile = userRepo.getCurrentUserProfile()
+                    if (existingProfile == null) {
+                        userRepo.createUserProfile(
+                            uid = user.uid,
+                            email = user.email ?: "",
+                            userType = com.example.djeventhub.models.UserType.DJ,
+                            displayName = user.displayName ?: user.email?.substringBefore("@") ?: "DJ"
+                        )
+                    }
                     _uiState.value = AuthUiState.Authenticated(user.uid)
                 } else {
                     _uiState.value = AuthUiState.Error("No user after Google sign-in")

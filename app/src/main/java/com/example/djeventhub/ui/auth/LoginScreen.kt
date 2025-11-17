@@ -7,6 +7,9 @@ import androidx.activity.result.contract.ActivityResultContracts
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.*
+import androidx.compose.foundation.layout.WindowInsets
+import androidx.compose.foundation.layout.systemBars
+import androidx.compose.foundation.layout.windowInsetsPadding
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.*
@@ -20,14 +23,14 @@ import androidx.compose.ui.text.input.PasswordVisualTransformation
 import androidx.compose.ui.text.input.VisualTransformation
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
-import androidx.lifecycle.viewmodel.compose.viewModel
+import androidx.hilt.navigation.compose.hiltViewModel
 import com.google.android.gms.auth.api.signin.GoogleSignIn
 import com.google.android.gms.auth.api.signin.GoogleSignInOptions
 import com.example.djeventhub.R
 import com.example.djeventhub.ui.components.NeonLoadingIndicator
 
 @Composable
-fun LoginScreen(onAuthenticated: (String) -> Unit, viewModel: AuthViewModel = viewModel()) {
+fun LoginScreen(onAuthenticated: (String) -> Unit, viewModel: AuthViewModel = hiltViewModel()) {
     val uiState = viewModel.uiState.collectAsState()
 
     // Local state
@@ -70,7 +73,10 @@ fun LoginScreen(onAuthenticated: (String) -> Unit, viewModel: AuthViewModel = vi
     val isLoading = uiState.value is AuthUiState.Loading
     val authErrorMessage = (uiState.value as? AuthUiState.Error)?.message
 
-    Box(modifier = Modifier.fillMaxSize()) {
+    Box(modifier = Modifier
+        .fillMaxSize()
+        .windowInsetsPadding(WindowInsets.systemBars)
+    ) {
         Column(
             modifier = Modifier
                 .fillMaxSize()

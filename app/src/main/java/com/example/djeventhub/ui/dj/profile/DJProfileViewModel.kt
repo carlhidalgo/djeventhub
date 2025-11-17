@@ -5,9 +5,11 @@ import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.example.djeventhub.data.UserRepository
 import com.example.djeventhub.models.User
+import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.launch
+import javax.inject.Inject
 
 sealed class DJProfileUiState {
     object Loading : DJProfileUiState()
@@ -15,11 +17,16 @@ sealed class DJProfileUiState {
     data class Error(val message: String) : DJProfileUiState()
 }
 
-class DJProfileViewModel : ViewModel() {
-    private val userRepository = UserRepository()
+@HiltViewModel
+class DJProfileViewModel @Inject constructor(
+    private val userRepository: UserRepository
+) : ViewModel() {
 
     private val _uiState = MutableStateFlow<DJProfileUiState>(DJProfileUiState.Loading)
     val uiState: StateFlow<DJProfileUiState> = _uiState
+
+    private val _message = MutableStateFlow<String?>(null)
+    val message: StateFlow<String?> = _message
 
     init {
         // Start observing profile in real-time
@@ -81,13 +88,20 @@ class DJProfileViewModel : ViewModel() {
                         phone = phone,
                         location = location
                     )
-                    userRepository.updateUserProfile(updatedUser)
-                    // Real-time observer will emit the updated user
+                    val result = userRepository.updateUserProfile(updatedUser)
+                    result.fold(onSuccess = {
+                        _message.value = "Perfil actualizado"
+                    }, onFailure = { e ->
+                        _message.value = e.message ?: "Error al actualizar"
+                    })
+                    // Real-time observer actualizará Success/Error
                 } else {
                     _uiState.value = DJProfileUiState.Error("No se encontró el usuario")
+                    _message.value = "Usuario inexistente"
                 }
             } catch (e: Exception) {
                 _uiState.value = DJProfileUiState.Error(e.message ?: "Error al actualizar perfil")
+                _message.value = e.message ?: "Error desconocido"
             }
         }
     }
@@ -101,22 +115,27 @@ class DJProfileViewModel : ViewModel() {
                     viewModelScope.launch {
                         val user = userRepository.getCurrentUserProfile()
                         if (user != null) {
-                            userRepository.updateUserProfile(user.copy(profileImageUrl = url))
-                            // Real-time observer will update UI state
+                            val result = userRepository.updateUserProfile(user.copy(profileImageUrl = url))
+                            result.fold(onSuccess = {
+                                _message.value = "Foto actualizada"
+                            }, onFailure = { e ->
+                                _message.value = e.message ?: "Error guardando foto"
+                            })
                         } else {
                             _uiState.value = DJProfileUiState.Error("No se encontró el usuario")
+                            _message.value = "Usuario inexistente"
                         }
                     }
                 }, onFailure = { e ->
-                    _uiState.value = DJProfileUiState.Error(
-                        e.message ?: "Error subiendo imagen"
-                    )
+                    _uiState.value = DJProfileUiState.Error(e.message ?: "Error subiendo imagen")
+                    _message.value = e.message ?: "Error subiendo imagen"
                 })
             } catch (e: Exception) {
-                _uiState.value = DJProfileUiState.Error(
-                    e.message ?: "Error subiendo imagen"
-                )
+                _uiState.value = DJProfileUiState.Error(e.message ?: "Error subiendo imagen")
+                _message.value = e.message ?: "Error subiendo imagen"
             }
         }
     }
+
+    fun consumeMessage() { _message.value = null }
 }

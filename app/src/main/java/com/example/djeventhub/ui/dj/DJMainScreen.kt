@@ -8,10 +8,8 @@ import androidx.compose.material.icons.filled.*
 import androidx.compose.material.icons.outlined.*
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
-import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
-import androidx.lifecycle.viewmodel.compose.viewModel
 import com.example.djeventhub.EventListViewModel
 import com.example.djeventhub.ui.events.EventsMainScreen
 import com.example.djeventhub.ui.navigation.BottomNavItem
@@ -33,6 +31,8 @@ fun DJMainScreen(
     onAddEvent: () -> Unit
 ) {
     var currentScreen by remember { mutableStateOf(DJScreen.HOME) }
+    // Flag to show edit profile inside PROFILE tab
+    var showEditProfile by remember { mutableStateOf(false) }
 
     val bottomNavItems = listOf(
         BottomNavItem(
@@ -75,11 +75,11 @@ fun DJMainScreen(
                 currentRoute = currentScreen.route,
                 onItemClick = { route ->
                     when (route) {
-                        DJScreen.HOME.route -> currentScreen = DJScreen.HOME
-                        DJScreen.MAP.route -> currentScreen = DJScreen.MAP
+                        DJScreen.HOME.route -> { currentScreen = DJScreen.HOME; showEditProfile = false }
+                        DJScreen.MAP.route -> { currentScreen = DJScreen.MAP; showEditProfile = false }
                         DJScreen.ADD.route -> onAddEvent()
-                        DJScreen.CHAT.route -> currentScreen = DJScreen.CHAT
-                        DJScreen.PROFILE.route -> currentScreen = DJScreen.PROFILE
+                        DJScreen.CHAT.route -> { currentScreen = DJScreen.CHAT; showEditProfile = false }
+                        DJScreen.PROFILE.route -> { currentScreen = DJScreen.PROFILE; /* keep showEditProfile as is */ }
                     }
                 }
             )
@@ -88,28 +88,28 @@ fun DJMainScreen(
         Box(modifier = Modifier.padding(paddingValues)) {
             // Animated content switching
             AnimatedContent(
-                targetState = currentScreen,
+                targetState = Pair(currentScreen, showEditProfile),
                 transitionSpec = {
                     fadeIn(animationSpec = tween(300)) +
                             slideInHorizontally(
                                 animationSpec = tween(300),
-                                initialOffsetX = { if (targetState.ordinal > initialState.ordinal) 300 else -300 }
+                                initialOffsetX = { 300 }
                             ) togetherWith
                             fadeOut(animationSpec = tween(300)) +
                             slideOutHorizontally(
                                 animationSpec = tween(300),
-                                targetOffsetX = { if (targetState.ordinal > initialState.ordinal) -300 else 300 }
+                                targetOffsetX = { -300 }
                             )
                 },
                 label = "screenTransition"
-            ) { screen ->
+            ) { (screen, editing) ->
                 when (screen) {
                     DJScreen.HOME -> {
                         EventsMainScreen(
                             viewModel = viewModel,
                             onLogout = onLogout,
                             onAddEvent = onAddEvent,
-                            onProfile = onProfile,
+                            onProfile = null, // Profile via bottom bar
                             showOnlyList = true
                         )
                     }
@@ -118,28 +118,36 @@ fun DJMainScreen(
                             viewModel = viewModel,
                             onLogout = onLogout,
                             onAddEvent = onAddEvent,
-                            onProfile = onProfile,
+                            onProfile = null, // Profile via bottom bar
                             showOnlyMap = true
                         )
                     }
                     DJScreen.CHAT -> {
                         com.example.djeventhub.ui.chat.ChatListScreen(
                             onNavigateBack = { currentScreen = DJScreen.HOME },
-                            onChatClick = { chatId ->
-                                // For now, just navigate - in full nav we'd handle this properly
-                                // This would typically navigate to the chat screen
-                            }
+                            onChatClick = { /* Navigate to chat detail if needed */ }
                         )
                     }
                     DJScreen.PROFILE -> {
-                        com.example.djeventhub.ui.dj.profile.DJProfileScreen(
-                            onNavigateBack = { currentScreen = DJScreen.HOME },
-                            onEdit = { /* TODO: Navigate to edit profile */ },
-                            showTopBar = false
-                        )
+                        if (editing) {
+                            com.example.djeventhub.ui.dj.profile.EditDJProfileScreen(
+                                onNavigateBack = { showEditProfile = false }
+                            )
+                        } else {
+                            com.example.djeventhub.ui.dj.profile.DJProfileScreen(
+                                onNavigateBack = { currentScreen = DJScreen.HOME },
+                                onEdit = { showEditProfile = true },
+                                showTopBar = true
+                            )
+                        }
                     }
-                    else -> {
-                        // Fallback
+                    DJScreen.ADD -> {
+                        // Trigger add-event then go back to HOME
+                        LaunchedEffect(Unit) {
+                            onAddEvent()
+                            currentScreen = DJScreen.HOME
+                        }
+                        Spacer(modifier = Modifier.height(0.dp))
                     }
                 }
             }

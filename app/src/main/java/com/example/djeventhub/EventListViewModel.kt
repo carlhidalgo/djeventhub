@@ -4,14 +4,17 @@ import android.location.Location
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.example.djeventhub.location.LocationManager
+import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.launch
+import javax.inject.Inject
 
 // ViewModel that exposes a list of events sorted by proximity
-class EventListViewModel(
+@HiltViewModel
+class EventListViewModel @Inject constructor(
     private val repository: EventRepository,
-    private val locationManager: LocationManager? = null
+    private val locationManager: LocationManager
 ) : ViewModel() {
 
     private val _events = MutableStateFlow<List<EventWithDistance>>(emptyList())
@@ -27,13 +30,12 @@ class EventListViewModel(
     val userLocation: StateFlow<Pair<Double, Double>?> = _userLocation
 
     init {
-        // Observe repository changes
+        // Observe repository changes in real-time
         viewModelScope.launch {
-            repository.events.collect { eventsList ->
+            repository.observeEvents().collect { eventsList ->
                 updateEventsWithDistance(eventsList)
             }
         }
-        loadEvents()
     }
 
     fun loadEvents() {
@@ -51,7 +53,7 @@ class EventListViewModel(
         // Try to get current location to sort by proximity
         val currentLocation = try {
             _isLoadingLocation.value = true
-            locationManager?.getCurrentLocation()
+            locationManager.getCurrentLocation()
         } catch (e: Exception) {
             _locationError.value = "No se pudo obtener la ubicación"
             null
@@ -69,7 +71,7 @@ class EventListViewModel(
             val distance = if (currentLocation != null &&
                               event.latitude != null &&
                               event.longitude != null) {
-                locationManager?.calculateDistance(
+                locationManager.calculateDistance(
                     currentLocation.latitude,
                     currentLocation.longitude,
                     event.latitude,

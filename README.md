@@ -1,12 +1,24 @@
 # DJ Event Hub
 
-DJ Event Hub es una aplicación Android escrita en Kotlin y Jetpack Compose para la gestión y visualización de eventos, con autenticación mediante Firebase.
+DJ Event Hub es una aplicación Android escrita en Kotlin y Jetpack Compose para la gestión y visualización de eventos musicales, con autenticación mediante Firebase y roles diferenciados (DJ/Productora).
+
+## 🎉 Actualización v2.0 - Firebase Integration
+
+✅ **Mejoras críticas implementadas**:
+- 🔄 **Persistencia en Firestore**: Los eventos ahora se guardan en la nube (antes solo memoria)
+- 📸 **Upload de imágenes**: Sube flyers a Firebase Storage con barra de progreso
+- 🛡️ **Fix crashes**: Corrección de errores críticos en manejo de eventos
+
+📖 **Ver detalles completos**: [MEJORAS_IMPLEMENTADAS.md](./MEJORAS_IMPLEMENTADAS.md)
+🔒 **Configurar seguridad**: [FIRESTORE_SECURITY_RULES.md](./FIRESTORE_SECURITY_RULES.md)
 
 ## Resumen
 
 - Plataforma: Android (Kotlin, Jetpack Compose)
-- Arquitectura sugerida: MVVM + Repository
-- Librerías principales: Jetpack Compose, Kotlin Coroutines, Retrofit/OkHttp, Moshi/Gson, Hilt, CameraX, Google Maps, Firebase (Auth, Cloud Messaging)
+- Arquitectura: MVVM + Repository Pattern
+- Backend: Firebase (Firestore, Storage, Auth)
+- Librerías principales: Jetpack Compose, Kotlin Coroutines, Google Maps, Firebase, Coil
+- Roles: DJ y Productora con funcionalidades específicas
 
 ---
 
