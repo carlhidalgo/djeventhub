@@ -2,11 +2,11 @@ package com.example.djeventhub.ui.events
 
 import android.content.Intent
 import android.net.Uri
-import android.webkit.WebView
-import android.webkit.WebViewClient
 import androidx.compose.foundation.background
+import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.rememberScrollState
+import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
@@ -14,6 +14,7 @@ import androidx.compose.material.icons.automirrored.filled.ArrowBack
 import androidx.compose.material.icons.filled.*
 import androidx.compose.material3.*
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
@@ -21,10 +22,12 @@ import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
-import androidx.compose.ui.viewinterop.AndroidView
 import coil.compose.AsyncImage
 import com.example.djeventhub.Event
 import com.example.djeventhub.ui.theme.*
+import com.google.android.gms.maps.model.CameraPosition
+import com.google.android.gms.maps.model.LatLng
+import com.google.maps.android.compose.*
 import java.text.SimpleDateFormat
 import java.util.*
 
@@ -217,7 +220,7 @@ fun EventDetailScreen(
 
                 Spacer(modifier = Modifier.height(16.dp))
 
-                // Map - embedded view
+                // Map - Google Maps
                 if (event.latitude != null && event.longitude != null) {
                     Text(
                         text = "Ubicación en el mapa",
@@ -227,57 +230,41 @@ fun EventDetailScreen(
                     )
                     Spacer(modifier = Modifier.height(12.dp))
 
+                    val eventLocation = remember { LatLng(event.latitude, event.longitude) }
+                    val cameraPositionState = rememberCameraPositionState {
+                        position = CameraPosition.fromLatLngZoom(eventLocation, 15f)
+                    }
+
                     Card(
                         modifier = Modifier
                             .fillMaxWidth()
-                            .height(250.dp),
+                            .height(300.dp),
                         shape = RoundedCornerShape(12.dp),
                         colors = CardDefaults.cardColors(
                             containerColor = DarkSurface
                         )
                     ) {
-                        AndroidView(
-                            factory = { context ->
-                                WebView(context).apply {
-                                    settings.javaScriptEnabled = true
-                                    webViewClient = WebViewClient()
-                                    settings.loadWithOverviewMode = true
-                                    settings.useWideViewPort = true
-                                    settings.setSupportZoom(true)
-                                }
-                            },
-                            update = { webView ->
-                                val mapHtml = """
-                                    <!DOCTYPE html>
-                                    <html>
-                                    <head>
-                                        <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-                                        <style>
-                                            body { margin: 0; padding: 0; }
-                                            #map { width: 100%; height: 100vh; }
-                                        </style>
-                                    </head>
-                                    <body>
-                                        <iframe 
-                                            id="map"
-                                            frameborder="0" 
-                                            scrolling="no" 
-                                            marginheight="0" 
-                                            marginwidth="0" 
-                                            src="https://maps.google.com/maps?q=${event.latitude},${event.longitude}&t=&z=15&ie=UTF8&iwloc=&output=embed">
-                                        </iframe>
-                                    </body>
-                                    </html>
-                                """.trimIndent()
-                                webView.loadData(mapHtml, "text/html", "UTF-8")
-                            },
-                            modifier = Modifier.fillMaxSize()
-                        )
+                        GoogleMap(
+                            modifier = Modifier.fillMaxSize(),
+                            cameraPositionState = cameraPositionState,
+                            properties = MapProperties(
+                                isMyLocationEnabled = false
+                            ),
+                            uiSettings = MapUiSettings(
+                                zoomControlsEnabled = true,
+                                myLocationButtonEnabled = false
+                            )
+                        ) {
+                            Marker(
+                                state = MarkerState(position = eventLocation),
+                                title = event.name,
+                                snippet = event.locationName
+                            )
+                        }
                     }
 
                     Spacer(modifier = Modifier.height(12.dp))
 
-                    // Button to open in Maps app
                     OutlinedButton(
                         onClick = {
                             val uri = Uri.parse("geo:${event.latitude},${event.longitude}?q=${event.latitude},${event.longitude}(${event.locationName})")
