@@ -2,6 +2,8 @@ package com.example.djeventhub.ui.events
 
 import android.content.Intent
 import android.net.Uri
+import android.webkit.WebView
+import android.webkit.WebViewClient
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.rememberScrollState
@@ -19,6 +21,7 @@ import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
+import androidx.compose.ui.viewinterop.AndroidView
 import coil.compose.AsyncImage
 import com.example.djeventhub.Event
 import com.example.djeventhub.ui.theme.*
@@ -214,8 +217,105 @@ fun EventDetailScreen(
 
                 Spacer(modifier = Modifier.height(16.dp))
 
+                // Map - embedded view
+                if (event.latitude != null && event.longitude != null) {
+                    Text(
+                        text = "Ubicación en el mapa",
+                        style = MaterialTheme.typography.titleMedium,
+                        fontWeight = FontWeight.Bold,
+                        color = TextPrimary
+                    )
+                    Spacer(modifier = Modifier.height(12.dp))
+
+                    Card(
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .height(250.dp),
+                        shape = RoundedCornerShape(12.dp),
+                        colors = CardDefaults.cardColors(
+                            containerColor = DarkSurface
+                        )
+                    ) {
+                        AndroidView(
+                            factory = { context ->
+                                WebView(context).apply {
+                                    settings.javaScriptEnabled = true
+                                    webViewClient = WebViewClient()
+                                    settings.loadWithOverviewMode = true
+                                    settings.useWideViewPort = true
+                                    settings.setSupportZoom(true)
+                                }
+                            },
+                            update = { webView ->
+                                val mapHtml = """
+                                    <!DOCTYPE html>
+                                    <html>
+                                    <head>
+                                        <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+                                        <style>
+                                            body { margin: 0; padding: 0; }
+                                            #map { width: 100%; height: 100vh; }
+                                        </style>
+                                    </head>
+                                    <body>
+                                        <iframe 
+                                            id="map"
+                                            frameborder="0" 
+                                            scrolling="no" 
+                                            marginheight="0" 
+                                            marginwidth="0" 
+                                            src="https://maps.google.com/maps?q=${event.latitude},${event.longitude}&t=&z=15&ie=UTF8&iwloc=&output=embed">
+                                        </iframe>
+                                    </body>
+                                    </html>
+                                """.trimIndent()
+                                webView.loadData(mapHtml, "text/html", "UTF-8")
+                            },
+                            modifier = Modifier.fillMaxSize()
+                        )
+                    }
+
+                    Spacer(modifier = Modifier.height(12.dp))
+
+                    // Button to open in Maps app
+                    OutlinedButton(
+                        onClick = {
+                            val uri = Uri.parse("geo:${event.latitude},${event.longitude}?q=${event.latitude},${event.longitude}(${event.locationName})")
+                            val intent = Intent(Intent.ACTION_VIEW, uri)
+                            intent.setPackage("com.google.android.apps.maps")
+                            if (intent.resolveActivity(context.packageManager) != null) {
+                                context.startActivity(intent)
+                            } else {
+                                val browserIntent = Intent(
+                                    Intent.ACTION_VIEW,
+                                    Uri.parse("https://maps.google.com/?q=${event.latitude},${event.longitude}")
+                                )
+                                context.startActivity(browserIntent)
+                            }
+                        },
+                        modifier = Modifier.fillMaxWidth(),
+                        shape = RoundedCornerShape(12.dp),
+                        colors = ButtonDefaults.outlinedButtonColors(
+                            contentColor = NeonPink
+                        )
+                    ) {
+                        Icon(
+                            Icons.Default.Place,
+                            contentDescription = null,
+                            modifier = Modifier.size(20.dp)
+                        )
+                        Spacer(modifier = Modifier.width(8.dp))
+                        Text(
+                            text = "Abrir en Google Maps",
+                            style = MaterialTheme.typography.bodyMedium,
+                            fontWeight = FontWeight.Medium
+                        )
+                    }
+                }
+
                 // Description
                 if (event.description.isNotEmpty()) {
+                    Spacer(modifier = Modifier.height(24.dp))
                     Text(
                         text = "Descripción",
                         style = MaterialTheme.typography.titleMedium,
@@ -228,47 +328,6 @@ fun EventDetailScreen(
                         style = MaterialTheme.typography.bodyMedium,
                         color = TextSecondary
                     )
-                    Spacer(modifier = Modifier.height(24.dp))
-                }
-
-                // Action Buttons
-                if (event.latitude != null && event.longitude != null) {
-                    Button(
-                        onClick = {
-                            val uri = Uri.parse("geo:${event.latitude},${event.longitude}?q=${event.latitude},${event.longitude}(${event.locationName})")
-                            val intent = Intent(Intent.ACTION_VIEW, uri)
-                            intent.setPackage("com.google.android.apps.maps")
-                            if (intent.resolveActivity(context.packageManager) != null) {
-                                context.startActivity(intent)
-                            } else {
-                                // Fallback to browser
-                                val browserIntent = Intent(
-                                    Intent.ACTION_VIEW,
-                                    Uri.parse("https://maps.google.com/?q=${event.latitude},${event.longitude}")
-                                )
-                                context.startActivity(browserIntent)
-                            }
-                        },
-                        modifier = Modifier
-                            .fillMaxWidth()
-                            .height(50.dp),
-                        colors = ButtonDefaults.buttonColors(
-                            containerColor = NeonPink
-                        ),
-                        shape = RoundedCornerShape(12.dp)
-                    ) {
-                        Icon(
-                            Icons.Default.Place,
-                            contentDescription = null,
-                            modifier = Modifier.size(20.dp)
-                        )
-                        Spacer(modifier = Modifier.width(8.dp))
-                        Text(
-                            text = "Ver en el mapa",
-                            style = MaterialTheme.typography.bodyLarge,
-                            fontWeight = FontWeight.SemiBold
-                        )
-                    }
                 }
 
                 Spacer(modifier = Modifier.height(16.dp))

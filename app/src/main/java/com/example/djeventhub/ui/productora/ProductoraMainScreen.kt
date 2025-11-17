@@ -115,7 +115,7 @@ fun ProductoraMainScreen(
                             onAddEvent = onAddEvent,
                             onProfile = onProfile,
                             showOnlyList = true,
-                            onEventClick = onEventClick
+                            onEventClick = onEventClick // Pass the onEventClick lambda to EventsMainScreen
                         )
                     }
                     ProductoraScreen.SEARCH -> {
