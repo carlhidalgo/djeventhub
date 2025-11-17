@@ -95,14 +95,6 @@ fun EventListScreen(
                     }
                 }
             }
-        },
-        floatingActionButton = {
-            FloatingActionButton(
-                onClick = onAddEvent,
-                containerColor = MaterialTheme.colorScheme.primary
-            ) {
-                Icon(Icons.Default.Add, contentDescription = "Crear evento")
-            }
         }
     ) { padding ->
         Column(modifier = Modifier.padding(padding)) {

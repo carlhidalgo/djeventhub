@@ -17,7 +17,7 @@ import com.example.djeventhub.ui.navigation.InstagramBottomBar
 
 enum class DJScreen(val route: String) {
     HOME("dj_home"),
-    MAP("dj_map"),
+    MY_EVENTS("dj_my_events"),
     ADD("dj_add"),
     CHAT("dj_chat"),
     PROFILE("dj_profile")
@@ -43,10 +43,10 @@ fun DJMainScreen(
             label = "Inicio"
         ),
         BottomNavItem(
-            route = DJScreen.MAP.route,
-            selectedIcon = Icons.Filled.Place,
-            unselectedIcon = Icons.Outlined.Place,
-            label = "Mapa"
+            route = DJScreen.MY_EVENTS.route,
+            selectedIcon = Icons.Filled.Star,
+            unselectedIcon = Icons.Outlined.Star,
+            label = "Mis Eventos"
         ),
         BottomNavItem(
             route = DJScreen.ADD.route,
@@ -77,7 +77,7 @@ fun DJMainScreen(
                 onItemClick = { route ->
                     when (route) {
                         DJScreen.HOME.route -> { currentScreen = DJScreen.HOME; showEditProfile = false }
-                        DJScreen.MAP.route -> { currentScreen = DJScreen.MAP; showEditProfile = false }
+                        DJScreen.MY_EVENTS.route -> { currentScreen = DJScreen.MY_EVENTS; showEditProfile = false }
                         DJScreen.ADD.route -> onAddEvent()
                         DJScreen.CHAT.route -> { currentScreen = DJScreen.CHAT; showEditProfile = false }
                         DJScreen.PROFILE.route -> { currentScreen = DJScreen.PROFILE; /* keep showEditProfile as is */ }
@@ -115,13 +115,10 @@ fun DJMainScreen(
                             onEventClick = onEventClick
                         )
                     }
-                    DJScreen.MAP -> {
-                        EventsMainScreen(
+                    DJScreen.MY_EVENTS -> {
+                        // Show events where the DJ has applied
+                        MyDJEventsScreen(
                             viewModel = viewModel,
-                            onLogout = onLogout,
-                            onAddEvent = onAddEvent,
-                            onProfile = null, // Profile via bottom bar
-                            showOnlyMap = true,
                             onEventClick = onEventClick
                         )
                     }

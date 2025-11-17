@@ -15,6 +15,8 @@ import androidx.compose.material.icons.filled.*
 import androidx.compose.material3.*
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.remember
+import androidx.compose.runtime.*
+import com.google.firebase.auth.FirebaseAuth
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
@@ -35,10 +37,14 @@ import java.util.*
 @Composable
 fun EventDetailScreen(
     event: Event,
-    onNavigateBack: () -> Unit
+    onNavigateBack: () -> Unit,
+    onApplyToEvent: ((String) -> Unit)? = null
 ) {
     val context = LocalContext.current
     val scrollState = rememberScrollState()
+    val currentUserId = FirebaseAuth.getInstance().currentUser?.uid ?: ""
+    val isAlreadyApplied = event.applicants.contains(currentUserId)
+    val isCreator = event.createdBy == currentUserId
 
     val dateFormat = SimpleDateFormat("dd MMM yyyy", Locale.getDefault())
     val timeFormat = SimpleDateFormat("HH:mm", Locale.getDefault())
@@ -315,6 +321,45 @@ fun EventDetailScreen(
                         style = MaterialTheme.typography.bodyMedium,
                         color = TextSecondary
                     )
+                }
+
+                // Apply button for DJs (only if not creator and callback provided)
+                if (!isCreator && onApplyToEvent != null) {
+                    Spacer(modifier = Modifier.height(24.dp))
+                    Button(
+                        onClick = { onApplyToEvent(event.id) },
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .height(56.dp),
+                        enabled = !isAlreadyApplied,
+                        colors = ButtonDefaults.buttonColors(
+                            containerColor = if (isAlreadyApplied) TextTertiary else NeonPink,
+                            disabledContainerColor = TextTertiary
+                        ),
+                        shape = RoundedCornerShape(12.dp)
+                    ) {
+                        Icon(
+                            if (isAlreadyApplied) Icons.Default.Check else Icons.Default.Person,
+                            contentDescription = null,
+                            modifier = Modifier.size(24.dp)
+                        )
+                        Spacer(modifier = Modifier.width(12.dp))
+                        Text(
+                            text = if (isAlreadyApplied) "Ya te postulaste" else "Postularme como DJ",
+                            style = MaterialTheme.typography.bodyLarge,
+                            fontWeight = FontWeight.Bold
+                        )
+                    }
+                    
+                    if (isAlreadyApplied) {
+                        Spacer(modifier = Modifier.height(8.dp))
+                        Text(
+                            text = "La productora revisará tu postulación",
+                            style = MaterialTheme.typography.bodySmall,
+                            color = TextSecondary,
+                            modifier = Modifier.padding(horizontal = 16.dp)
+                        )
+                    }
                 }
 
                 Spacer(modifier = Modifier.height(16.dp))

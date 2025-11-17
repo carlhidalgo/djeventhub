@@ -20,7 +20,7 @@ import com.example.djeventhub.ui.navigation.InstagramBottomBar
 
 enum class ProductoraScreen(val route: String) {
     HOME("productora_home"),
-    SEARCH("productora_search"),
+    MY_EVENTS("productora_my_events"),
     ADD("productora_add"),
     CHAT("productora_chat"),
     PROFILE("productora_profile")
@@ -46,10 +46,10 @@ fun ProductoraMainScreen(
             label = "Inicio"
         ),
         BottomNavItem(
-            route = ProductoraScreen.SEARCH.route,
-            selectedIcon = Icons.Filled.Search,
-            unselectedIcon = Icons.Outlined.Search,
-            label = "Buscar DJs"
+            route = ProductoraScreen.MY_EVENTS.route,
+            selectedIcon = Icons.Filled.Star,
+            unselectedIcon = Icons.Outlined.Star,
+            label = "Mis Eventos"
         ),
         BottomNavItem(
             route = ProductoraScreen.ADD.route,
@@ -80,7 +80,7 @@ fun ProductoraMainScreen(
                 onItemClick = { route ->
                     when (route) {
                         ProductoraScreen.HOME.route -> { currentScreen = ProductoraScreen.HOME; showEditProfile = false }
-                        ProductoraScreen.SEARCH.route -> { currentScreen = ProductoraScreen.SEARCH; showEditProfile = false }
+                        ProductoraScreen.MY_EVENTS.route -> { currentScreen = ProductoraScreen.MY_EVENTS; showEditProfile = false }
                         ProductoraScreen.ADD.route -> onAddEvent()
                         ProductoraScreen.CHAT.route -> { currentScreen = ProductoraScreen.CHAT; showEditProfile = false }
                         ProductoraScreen.PROFILE.route -> { currentScreen = ProductoraScreen.PROFILE }
@@ -118,8 +118,12 @@ fun ProductoraMainScreen(
                             onEventClick = onEventClick // Pass the onEventClick lambda to EventsMainScreen
                         )
                     }
-                    ProductoraScreen.SEARCH -> {
-                        SearchDJsPlaceholderScreen(onSearch = onSearchDJs)
+                    ProductoraScreen.MY_EVENTS -> {
+                        // Show events created by this productora
+                        MyProductoraEventsScreen(
+                            viewModel = viewModel,
+                            onEventClick = onEventClick
+                        )
                     }
                     ProductoraScreen.CHAT -> {
                         ChatPlaceholderScreen()

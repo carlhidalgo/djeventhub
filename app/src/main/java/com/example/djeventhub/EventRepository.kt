@@ -1,7 +1,9 @@
 package com.example.djeventhub
 
+import com.google.firebase.auth.FirebaseAuth
 import com.google.firebase.firestore.FirebaseFirestore
 import com.google.firebase.firestore.Query
+import com.google.firebase.firestore.FieldValue
 import kotlinx.coroutines.channels.awaitClose
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.callbackFlow
@@ -9,7 +11,8 @@ import kotlinx.coroutines.tasks.await
 
 // Repository that centralizes data access for events using Firebase Firestore
 class EventRepository(
-    private val firestore: FirebaseFirestore = FirebaseFirestore.getInstance()
+    private val firestore: FirebaseFirestore = FirebaseFirestore.getInstance(),
+    private val auth: FirebaseAuth = FirebaseAuth.getInstance()
 ) {
     private val eventsCollection = firestore.collection("events")
 
@@ -197,5 +200,38 @@ class EventRepository(
             Result.failure(e)
         }
     }
-}
 
+    /**
+     * Apply to an event as a DJ
+     */
+    suspend fun applyToEvent(eventId: String): Result<Unit> {
+        return try {
+            val currentUserId = auth.currentUser?.uid ?: return Result.failure(Exception("Usuario no autenticado"))
+            
+            eventsCollection.document(eventId)
+                .update("applicants", FieldValue.arrayUnion(currentUserId))
+                .await()
+            
+            Result.success(Unit)
+        } catch (e: Exception) {
+            Result.failure(e)
+        }
+    }
+
+    /**
+     * Remove application from an event
+     */
+    suspend fun removeApplication(eventId: String): Result<Unit> {
+        return try {
+            val currentUserId = auth.currentUser?.uid ?: return Result.failure(Exception("Usuario no autenticado"))
+            
+            eventsCollection.document(eventId)
+                .update("applicants", FieldValue.arrayRemove(currentUserId))
+                .await()
+            
+            Result.success(Unit)
+        } catch (e: Exception) {
+            Result.failure(e)
+        }
+    }
+}

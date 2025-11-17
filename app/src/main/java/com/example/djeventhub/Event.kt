@@ -13,6 +13,9 @@ data class Event(
     val latitude: Double?,
     val longitude: Double?,
     val imageUrl: String?,
-    val musicGenre: String? = null // Optional music genre
+    val musicGenre: String? = null, // Optional music genre
+    val createdBy: String = "", // User ID of the event creator
+    val applicants: List<String> = emptyList(), // List of DJ user IDs who applied
+    val selectedDJ: String? = null // Selected DJ user ID (if any)
 ) : Serializable
 

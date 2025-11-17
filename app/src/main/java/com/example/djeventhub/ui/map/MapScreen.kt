@@ -117,16 +117,6 @@ fun MapScreen(
                     }
                 }
             }
-        },
-        floatingActionButton = {
-            if (onAddEvent != null) {
-                FloatingActionButton(
-                    onClick = onAddEvent,
-                    containerColor = MaterialTheme.colorScheme.primary
-                ) {
-                    Icon(Icons.Default.Add, contentDescription = "Crear evento")
-                }
-            }
         }
     ) { paddingValues ->
     Box(
