@@ -130,8 +130,12 @@ fun DJMainScreen(
                     }
                     DJScreen.CHAT -> {
                         com.example.djeventhub.ui.chat.ChatListScreen(
-                            onNavigateBack = { currentScreen = DJScreen.HOME },
-                            onChatClick = { /* Navigate to chat detail if needed */ }
+                            onNavigateBack = null,
+                            onChatClick = { chatId ->
+                                // TODO: Implement navigation to chat detail
+                                // For now, just log
+                                android.util.Log.d("DJMainScreen", "Chat clicked: $chatId")
+                            }
                         )
                     }
                     DJScreen.PROFILE -> {

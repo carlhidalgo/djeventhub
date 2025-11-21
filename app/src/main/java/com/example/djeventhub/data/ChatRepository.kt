@@ -35,24 +35,27 @@ class ChatRepository @Inject constructor(
         val existingChat = chatsCollection.document(chatId).get().await()
 
         if (!existingChat.exists()) {
-            // Create new chat
-            val chat = Chat(
-                chatId = chatId,
-                participantIds = listOf(currentUserId, otherUserId),
-                participantNames = mapOf(
+            // Create new chat with all fields initialized
+            val chatData = hashMapOf(
+                "chatId" to chatId,
+                "participantIds" to listOf(currentUserId, otherUserId),
+                "participantNames" to mapOf(
                     currentUserId to (currentUser.artistName ?: currentUser.displayName),
                     otherUserId to otherUserName
                 ),
-                participantImages = mapOf(
+                "participantImages" to mapOf(
                     currentUserId to currentUser.profileImageUrl,
                     otherUserId to otherUserImage
                 ),
-                unreadCount = mapOf(
+                "unreadCount" to mapOf(
                     currentUserId to 0,
                     otherUserId to 0
-                )
+                ),
+                "lastMessage" to "",
+                "lastMessageSenderId" to "",
+                "createdAt" to com.google.firebase.firestore.FieldValue.serverTimestamp()
             )
-            chatsCollection.document(chatId).set(chat).await()
+            chatsCollection.document(chatId).set(chatData).await()
         }
 
         return chatId

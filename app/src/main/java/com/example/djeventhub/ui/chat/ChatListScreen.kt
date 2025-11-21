@@ -14,6 +14,7 @@ import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
+import androidx.compose.material.icons.filled.Refresh
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
@@ -51,6 +52,13 @@ fun ChatListScreen(
                     }
                 },
                 actions = {
+                    IconButton(onClick = { viewModel.refresh() }) {
+                        Icon(
+                            Icons.Default.Refresh,
+                            contentDescription = "Actualizar",
+                            tint = NeonPink
+                        )
+                    }
                     if (uiState is ChatListUiState.Success) {
                         val total = (uiState as ChatListUiState.Success).totalUnreadCount
                         if (total > 0) {
@@ -110,10 +118,13 @@ fun ChatListScreen(
                 }
             }
             is ChatListUiState.Success -> {
+                // Debug logging
+                android.util.Log.d("ChatListScreen", "Success state: ${state.chats.size} chats, totalUnread=${state.totalUnreadCount}")
                 val filtered = if (searchQuery.isBlank()) state.chats else state.chats.filter { chat ->
                     val currentUserId = com.google.firebase.auth.FirebaseAuth.getInstance().currentUser?.uid ?: ""
                     chat.getOtherParticipantName(currentUserId).contains(searchQuery, ignoreCase = true)
                 }
+                android.util.Log.d("ChatListScreen", "Filtered: ${filtered.size} chats")
                 Column(
                     modifier = Modifier
                         .fillMaxSize()

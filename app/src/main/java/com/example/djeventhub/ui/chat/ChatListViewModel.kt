@@ -40,15 +40,22 @@ class ChatListViewModel @Inject constructor(
         observeJob = viewModelScope.launch {
             if (initial) _uiState.value = ChatListUiState.Loading
             try {
+                android.util.Log.d("ChatListViewModel", "Starting to observe chats")
                 chatRepository.observeUserChats().collect { chats ->
+                    android.util.Log.d("ChatListViewModel", "Received ${chats.size} chats from repository")
+                    chats.forEachIndexed { index, chat ->
+                        android.util.Log.d("ChatListViewModel", "Chat $index: id=${chat.chatId}, participants=${chat.participantIds}, lastMessage=${chat.lastMessage}")
+                    }
                     val totalUnread = chatRepository.getTotalUnreadCount()
                     _uiState.value = ChatListUiState.Success(
                         chats = chats,
                         totalUnreadCount = totalUnread,
                         isRefreshing = false
                     )
+                    android.util.Log.d("ChatListViewModel", "UI State updated with ${chats.size} chats")
                 }
             } catch (e: Exception) {
+                android.util.Log.e("ChatListViewModel", "Error observing chats: ${e.message}", e)
                 _uiState.value = ChatListUiState.Error(e.message ?: "Error al cargar chats")
             }
         }
