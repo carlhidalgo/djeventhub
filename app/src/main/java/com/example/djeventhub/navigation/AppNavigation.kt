@@ -315,6 +315,16 @@ fun AppNavigation(
                 },
                 onViewDJProfile = { djId ->
                     navController.navigate(Screen.PublicDJProfile.createRoute(djId))
+                },
+                onOpenChat = { chatId, otherName ->
+                    navController.navigate(Screen.Chat.createRoute(chatId, otherName))
+                },
+                onAcceptApplicant = { djId ->
+                    // accept application via repository using the existing scope
+                    scope.launch {
+                        val repo = EventRepository()
+                        repo.acceptApplication(eventId, djId)
+                    }
                 }
             )
         }

@@ -54,7 +54,10 @@ class MainActivity : ComponentActivity() {
         )
         setContent {
             DJEventHubTheme {
-                Surface(modifier = Modifier.fillMaxSize()) {
+                Surface(
+                    modifier = Modifier.fillMaxSize(),
+                    color = com.example.djeventhub.ui.theme.DeepBlack
+                ) {
                     MainContent()
                 }
             }

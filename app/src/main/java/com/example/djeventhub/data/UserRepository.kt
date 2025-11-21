@@ -141,4 +141,29 @@ class UserRepository @Inject constructor(
             emptyList()
         }
     }
+
+    // Add rating to a user
+    suspend fun addRating(userId: String, rating: Int): Result<Unit> {
+        return try {
+            val userDoc = usersCollection.document(userId).get().await()
+            val current = userDoc.toObject(User::class.java)
+            if (current == null) return Result.failure(Exception("Usuario no encontrado"))
+
+            val newTotal = current.totalRatings + 1
+            val newRating = ((current.rating * current.totalRatings) + rating) / newTotal.toDouble()
+            val newEventsCompleted = current.eventsCompleted + 1
+
+            usersCollection.document(userId).update(
+                mapOf(
+                    "rating" to newRating,
+                    "totalRatings" to newTotal,
+                    "eventsCompleted" to newEventsCompleted
+                ) as Map<String, Any>
+            ).await()
+
+            Result.success(Unit)
+        } catch (e: Exception) {
+            Result.failure(e)
+        }
+    }
 }

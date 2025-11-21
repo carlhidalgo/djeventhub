@@ -3,7 +3,6 @@ package com.example.djeventhub
 import android.content.Intent
 import android.net.Uri
 import androidx.compose.animation.core.*
-import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
@@ -14,13 +13,12 @@ import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.itemsIndexed
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.automirrored.filled.ExitToApp
-import androidx.compose.material.icons.filled.Add
 import androidx.compose.material.icons.filled.DateRange
 import androidx.compose.material.icons.filled.LocationOn
-import androidx.compose.material.icons.filled.Person
-import androidx.compose.material.icons.filled.Refresh
 import androidx.compose.material3.*
+import com.google.accompanist.swiperefresh.SwipeRefresh
+import com.google.accompanist.swiperefresh.SwipeRefreshIndicator
+import com.google.accompanist.swiperefresh.rememberSwipeRefreshState
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
@@ -33,6 +31,7 @@ import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.height
 import com.example.djeventhub.ui.animations.animateItemPlacement
 import com.example.djeventhub.ui.animations.bounceClick
+import com.example.djeventhub.ui.theme.*
 import java.text.SimpleDateFormat
 import java.util.*
 
@@ -41,83 +40,78 @@ import java.util.*
 @Composable
 fun EventListScreen(
     viewModel: EventListViewModel,
-    onLogout: () -> Unit,
     onAddEvent: () -> Unit,
     onProfile: (() -> Unit)? = null,
     onEventClick: (String) -> Unit = {}
 ) {
     val events by viewModel.events.collectAsState()
-    val isLoadingLocation by viewModel.isLoadingLocation.collectAsState()
+    val isRefreshing by viewModel.isRefreshing.collectAsState()
     val context = LocalContext.current
 
     Scaffold(
         topBar = {
-            Surface(
-                modifier = Modifier.fillMaxWidth(),
-                color = MaterialTheme.colorScheme.surface
-            ) {
-                Row(
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .windowInsetsPadding(WindowInsets.statusBars)
-                        .height(40.dp)
-                        .padding(horizontal = 4.dp),
-                    horizontalArrangement = Arrangement.SpaceBetween,
-                    verticalAlignment = Alignment.CenterVertically
-                ) {
+            CenterAlignedTopAppBar(
+                title = {
                     Text(
                         "DJ Event Hub",
-                        style = MaterialTheme.typography.bodyMedium,
-                        maxLines = 1,
-                        modifier = Modifier.padding(start = 8.dp)
+                        style = MaterialTheme.typography.titleLarge,
+                        fontWeight = FontWeight.Bold,
+                        color = com.example.djeventhub.ui.theme.TextPrimary
                     )
-                    Row {
-                        IconButton(
-                            onClick = { viewModel.refreshLocation() },
-                            modifier = Modifier.size(32.dp)
-                        ) {
-                            Icon(
-                                Icons.Default.Refresh,
-                                contentDescription = "Actualizar ubicación",
-                                modifier = Modifier.size(18.dp)
-                            )
-                        }
-                        IconButton(
-                            onClick = onLogout,
-                            modifier = Modifier.size(32.dp)
-                        ) {
-                            Icon(
-                                Icons.AutoMirrored.Filled.ExitToApp,
-                                contentDescription = "Cerrar sesión",
-                                modifier = Modifier.size(18.dp)
-                            )
-                        }
+                },
+                colors = TopAppBarDefaults.centerAlignedTopAppBarColors(
+                    containerColor = com.example.djeventhub.ui.theme.DeepBlack
+                ),
+                modifier = Modifier.height(56.dp)
+            )
+        },
+        containerColor = com.example.djeventhub.ui.theme.DeepBlack
+    ) { padding ->
+        val swipeState = rememberSwipeRefreshState(isRefreshing)
+
+        Box(
+            modifier = Modifier
+                .fillMaxSize()
+                .padding(padding)
+        ) {
+            SwipeRefresh(
+                state = swipeState,
+                onRefresh = { viewModel.refreshLocation() },
+                indicator = { s, trigger ->
+                    SwipeRefreshIndicator(state = s, refreshTriggerDistance = trigger)
+                }
+            ) {
+                LazyColumn(
+                    modifier = Modifier
+                        .fillMaxSize()
+                        .padding(horizontal = 8.dp)
+                ) {
+                    itemsIndexed(
+                        items = events,
+                        key = { _, item -> item.event.id }
+                    ) { index, eventWithDistance ->
+                        EventListItem(
+                            eventWithDistance = eventWithDistance,
+                            onMapClick = { event ->
+                                openInMaps(context, event)
+                            },
+                            onEventClick = { eventId ->
+                                onEventClick(eventId)
+                            },
+                            modifier = Modifier.animateItemPlacement(index)
+                        )
                     }
                 }
             }
-        }
-    ) { padding ->
-        Column(modifier = Modifier.padding(padding)) {
-            if (isLoadingLocation) {
-                LinearProgressIndicator(modifier = Modifier.fillMaxWidth())
-            }
 
-            LazyColumn(modifier = Modifier.padding(horizontal = 8.dp)) {
-                itemsIndexed(
-                    items = events,
-                    key = { _, item -> item.event.id }
-                ) { index, eventWithDistance ->
-                    EventListItem(
-                        eventWithDistance = eventWithDistance,
-                        onMapClick = { event ->
-                            openInMaps(context, event)
-                        },
-                        onEventClick = { eventId ->
-                            onEventClick(eventId)
-                        },
-                        modifier = Modifier.animateItemPlacement(index)
-                    )
-                }
+            // Optional: keep a manual indicator (Accompanist shows one inside SwipeRefresh)
+            if (isRefreshing) {
+                CircularProgressIndicator(
+                    modifier = Modifier
+                        .align(Alignment.TopCenter)
+                        .padding(top = 16.dp),
+                    color = MaterialTheme.colorScheme.primary
+                )
             }
         }
     }
@@ -341,4 +335,3 @@ private fun openInMaps(context: android.content.Context, event: Event) {
         context.startActivity(browserIntent)
     }
 }
-

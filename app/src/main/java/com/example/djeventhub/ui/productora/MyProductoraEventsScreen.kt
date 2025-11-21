@@ -20,7 +20,8 @@ import com.google.firebase.auth.FirebaseAuth
 fun MyProductoraEventsScreen(
     viewModel: EventListViewModel,
     onEventClick: (String) -> Unit,
-    onViewApplicants: (String, String) -> Unit = { _, _ -> }
+    onViewApplicants: (String, String) -> Unit = { _, _ -> },
+    onRateSelectedDJ: (String) -> Unit = {}
 ) {
     val events by viewModel.events.collectAsState()
     val currentUserId = FirebaseAuth.getInstance().currentUser?.uid ?: ""
@@ -32,17 +33,19 @@ fun MyProductoraEventsScreen(
 
     Scaffold(
         topBar = {
-            TopAppBar(
-                title = { 
+            CenterAlignedTopAppBar(
+                title = {
                     Text(
                         "Mis Eventos Creados",
-                        style = MaterialTheme.typography.titleMedium
-                    ) 
+                        style = MaterialTheme.typography.titleLarge,
+                        fontWeight = FontWeight.Bold,
+                        color = TextPrimary
+                    )
                 },
-                colors = TopAppBarDefaults.topAppBarColors(
+                colors = TopAppBarDefaults.centerAlignedTopAppBarColors(
                     containerColor = DeepBlack
                 ),
-                windowInsets = WindowInsets(0.dp)
+                modifier = Modifier.height(56.dp)
             )
         },
         containerColor = DeepBlack
@@ -82,7 +85,8 @@ fun MyProductoraEventsScreen(
                     ProductoraEventCard(
                         eventWithDistance = eventWithDistance,
                         onClick = { onEventClick(eventWithDistance.event.id) },
-                        onViewApplicants = { onViewApplicants(eventWithDistance.event.id, eventWithDistance.event.name) }
+                        onViewApplicants = { onViewApplicants(eventWithDistance.event.id, eventWithDistance.event.name) },
+                        onRateSelectedDJ = { djId -> onRateSelectedDJ(djId) }
                     )
                 }
             }
@@ -94,7 +98,8 @@ fun MyProductoraEventsScreen(
 fun ProductoraEventCard(
     eventWithDistance: com.example.djeventhub.EventWithDistance,
     onClick: () -> Unit,
-    onViewApplicants: () -> Unit
+    onViewApplicants: () -> Unit,
+    onRateSelectedDJ: (String) -> Unit = {}
 ) {
     val event = eventWithDistance.event
     val applicantsCount = event.applicants.size
@@ -130,13 +135,24 @@ fun ProductoraEventCard(
                         color = NeonPink.copy(alpha = 0.2f),
                         shape = androidx.compose.foundation.shape.RoundedCornerShape(8.dp)
                     ) {
-                        Text(
-                            text = "DJ Asignado",
-                            style = MaterialTheme.typography.labelSmall,
-                            color = NeonPink,
-                            fontWeight = FontWeight.Bold,
-                            modifier = Modifier.padding(horizontal = 8.dp, vertical = 4.dp)
-                        )
+                        Row(verticalAlignment = Alignment.CenterVertically) {
+                            Text(
+                                text = "DJ Asignado",
+                                style = MaterialTheme.typography.labelSmall,
+                                color = NeonPink,
+                                fontWeight = FontWeight.Bold,
+                                modifier = Modifier.padding(horizontal = 8.dp, vertical = 4.dp)
+                            )
+                            Spacer(modifier = Modifier.width(8.dp))
+                            Button(
+                                onClick = { onRateSelectedDJ(event.selectedDJ ?: "") },
+                                colors = ButtonDefaults.buttonColors(containerColor = NeonPurple),
+                                shape = androidx.compose.foundation.shape.RoundedCornerShape(8.dp),
+                                contentPadding = PaddingValues(horizontal = 8.dp, vertical = 4.dp)
+                            ) {
+                                Text(text = "Calificar DJ", style = MaterialTheme.typography.labelSmall, color = DeepBlack)
+                            }
+                        }
                     }
                 }
             }

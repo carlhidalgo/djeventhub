@@ -149,11 +149,13 @@ fun AddEventScreen(
 
     Scaffold(
         topBar = {
-            TopAppBar(
+            CenterAlignedTopAppBar(
                 title = {
                     Text(
                         "Crear Evento",
-                        style = MaterialTheme.typography.titleMedium
+                        style = MaterialTheme.typography.titleLarge,
+                        fontWeight = FontWeight.Bold,
+                        color = com.example.djeventhub.ui.theme.TextPrimary
                     )
                 },
                 navigationIcon = {
@@ -165,7 +167,10 @@ fun AddEventScreen(
                         )
                     }
                 },
-                modifier = Modifier.height(48.dp)
+                colors = TopAppBarDefaults.centerAlignedTopAppBarColors(
+                    containerColor = com.example.djeventhub.ui.theme.DeepBlack
+                ),
+                modifier = Modifier.height(56.dp)
             )
         }
     ) { padding ->

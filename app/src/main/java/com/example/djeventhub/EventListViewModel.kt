@@ -23,6 +23,9 @@ class EventListViewModel @Inject constructor(
     private val _isLoadingLocation = MutableStateFlow(false)
     val isLoadingLocation: StateFlow<Boolean> = _isLoadingLocation
 
+    private val _isRefreshing = MutableStateFlow(false)
+    val isRefreshing: StateFlow<Boolean> = _isRefreshing
+
     private val _locationError = MutableStateFlow<String?>(null)
     val locationError: StateFlow<String?> = _locationError
 
@@ -67,21 +70,27 @@ class EventListViewModel @Inject constructor(
         }
 
         // Convert events to EventWithDistance and sort
-        val eventsWithDistance = eventsList.map { event ->
-            val distance = if (currentLocation != null &&
-                              event.latitude != null &&
-                              event.longitude != null) {
-                locationManager.calculateDistance(
-                    currentLocation.latitude,
-                    currentLocation.longitude,
-                    event.latitude,
-                    event.longitude
-                )
-            } else {
-                null
+        val now = System.currentTimeMillis()
+        val eventsWithDistance = eventsList
+            .filter { event ->
+                val effectiveEnd = event.endDate ?: event.date
+                effectiveEnd >= now // keep future or ongoing events
             }
-            EventWithDistance(event, distance)
-        }
+            .map { event ->
+                val distance = if (currentLocation != null &&
+                                  event.latitude != null &&
+                                  event.longitude != null) {
+                    locationManager.calculateDistance(
+                        currentLocation.latitude,
+                        currentLocation.longitude,
+                        event.latitude,
+                        event.longitude
+                    )
+                } else {
+                    null
+                }
+                EventWithDistance(event, distance)
+            }
 
         // Sort: events with distance first (by distance), then others by date
         _events.value = eventsWithDistance.sortedWith(
@@ -94,7 +103,17 @@ class EventListViewModel @Inject constructor(
     }
 
     fun refreshLocation() {
-        loadEvents()
+        viewModelScope.launch {
+            _isRefreshing.value = true
+            try {
+                val result = repository.getEvents()
+                updateEventsWithDistance(result)
+            } catch (e: Exception) {
+                _locationError.value = "Error al refrescar eventos"
+            } finally {
+                _isRefreshing.value = false
+            }
+        }
     }
 }
 
@@ -110,4 +129,3 @@ data class EventWithDistance(
             else -> String.format("%.1f km", distanceInMeters / 1000)
         }
 }
-

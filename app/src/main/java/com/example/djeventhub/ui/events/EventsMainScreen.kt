@@ -18,7 +18,6 @@ enum class EventsTab {
 @Composable
 fun EventsMainScreen(
     viewModel: EventListViewModel,
-    onLogout: () -> Unit,
     onAddEvent: () -> Unit,
     onProfile: (() -> Unit)? = null,
     showOnlyList: Boolean = false,
@@ -73,7 +72,6 @@ fun EventsMainScreen(
                 EventsTab.LIST -> {
                     EventListScreen(
                         viewModel = viewModel,
-                        onLogout = onLogout,
                         onAddEvent = onAddEvent,
                         onProfile = onProfile,
                         onEventClick = onEventClick
@@ -81,8 +79,7 @@ fun EventsMainScreen(
                 }
                 EventsTab.MAP -> {
                     MapScreen(
-                        viewModel = viewModel,
-                        onLogout = onLogout
+                        viewModel = viewModel
                     )
                 }
             }

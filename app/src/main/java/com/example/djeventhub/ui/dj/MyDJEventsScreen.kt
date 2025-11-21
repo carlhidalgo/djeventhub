@@ -29,17 +29,19 @@ fun MyDJEventsScreen(
 
     Scaffold(
         topBar = {
-            TopAppBar(
-                title = { 
+            CenterAlignedTopAppBar(
+                title = {
                     Text(
                         "Mis Postulaciones",
-                        style = MaterialTheme.typography.titleMedium
-                    ) 
+                        style = MaterialTheme.typography.titleLarge,
+                        fontWeight = FontWeight.Bold,
+                        color = TextPrimary
+                    )
                 },
-                colors = TopAppBarDefaults.topAppBarColors(
+                colors = TopAppBarDefaults.centerAlignedTopAppBarColors(
                     containerColor = DeepBlack
                 ),
-                windowInsets = WindowInsets(0.dp)
+                modifier = Modifier.height(56.dp)
             )
         },
         containerColor = DeepBlack

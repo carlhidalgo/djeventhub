@@ -14,6 +14,7 @@ import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
+import androidx.compose.material.icons.automirrored.filled.ExitToApp
 import androidx.compose.material.icons.filled.Edit
 import androidx.compose.material.icons.filled.Star
 import androidx.compose.material3.*
@@ -35,6 +36,7 @@ import com.example.djeventhub.ui.theme.*
 fun DJProfileScreen(
     onNavigateBack: () -> Unit,
     onEdit: () -> Unit,
+    onLogout: () -> Unit = {},
     viewModel: DJProfileViewModel = hiltViewModel(),
     showTopBar: Boolean = true
 ) {
@@ -48,11 +50,13 @@ fun DJProfileScreen(
     Scaffold(
         topBar = {
             if (showTopBar) {
-                TopAppBar(
+                CenterAlignedTopAppBar(
                     title = {
                         Text(
                             "Mi Perfil DJ",
-                            style = MaterialTheme.typography.titleMedium
+                            style = MaterialTheme.typography.titleLarge,
+                            fontWeight = FontWeight.Bold,
+                            color = TextPrimary
                         )
                     },
                     navigationIcon = {
@@ -76,11 +80,10 @@ fun DJProfileScreen(
                             }
                         }
                     },
-                    colors = TopAppBarDefaults.topAppBarColors(
+                    colors = TopAppBarDefaults.centerAlignedTopAppBarColors(
                         containerColor = DeepBlack
                     ),
-                    windowInsets = WindowInsets(0.dp),
-                    modifier = Modifier.height(48.dp)
+                    modifier = Modifier.height(56.dp)
                 )
             }
         },
@@ -117,6 +120,7 @@ fun DJProfileScreen(
                 DJProfileContent(
                     user = state.user,
                     onPickImage = { launcher.launch("image/*") },
+                    onLogout = onLogout,
                     viewModel = viewModel,
                     modifier = Modifier.padding(padding)
                 )
@@ -128,8 +132,9 @@ fun DJProfileScreen(
 @OptIn(ExperimentalLayoutApi::class)
 @Composable
 fun DJProfileContent(
-    user: User, 
-    onPickImage: () -> Unit, 
+    user: User,
+    onPickImage: () -> Unit,
+    onLogout: () -> Unit,
     viewModel: DJProfileViewModel,
     modifier: Modifier = Modifier
 ) {
@@ -199,6 +204,35 @@ fun DJProfileContent(
         } else {
             PlaceholderCard(title = "Contacto", message = "Añade tu teléfono y ubicación desde Editar")
         }
+
+        Spacer(modifier = Modifier.height(24.dp))
+
+        // Logout button
+        OutlinedButton(
+            onClick = onLogout,
+            modifier = Modifier
+                .fillMaxWidth()
+                .height(48.dp),
+            colors = ButtonDefaults.outlinedButtonColors(
+                contentColor = ErrorRed
+            ),
+            border = androidx.compose.foundation.BorderStroke(1.dp, ErrorRed),
+            shape = RoundedCornerShape(12.dp)
+        ) {
+            Icon(
+                Icons.AutoMirrored.Filled.ExitToApp,
+                contentDescription = "Cerrar sesión",
+                modifier = Modifier.size(20.dp)
+            )
+            Spacer(modifier = Modifier.width(8.dp))
+            Text(
+                text = "Cerrar sesión",
+                style = MaterialTheme.typography.bodyLarge,
+                fontWeight = FontWeight.Medium
+            )
+        }
+
+        Spacer(modifier = Modifier.height(32.dp))
     }
 }
 

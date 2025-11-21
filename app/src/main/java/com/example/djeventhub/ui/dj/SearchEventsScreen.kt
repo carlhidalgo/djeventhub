@@ -26,18 +26,19 @@ fun SearchEventsScreen(
 
     Scaffold(
         topBar = {
-            TopAppBar(
-                title = { 
+            CenterAlignedTopAppBar(
+                title = {
                     Text(
                         "Buscar Eventos",
-                        style = MaterialTheme.typography.titleMedium
+                        style = MaterialTheme.typography.titleLarge,
+                        fontWeight = FontWeight.Bold,
+                        color = TextPrimary
                     )
                 },
-                colors = TopAppBarDefaults.topAppBarColors(
+                colors = TopAppBarDefaults.centerAlignedTopAppBarColors(
                     containerColor = DeepBlack
                 ),
-                windowInsets = WindowInsets(0.dp),
-                modifier = Modifier.height(48.dp)
+                modifier = Modifier.height(56.dp)
             )
         },
         containerColor = DeepBlack

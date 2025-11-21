@@ -104,8 +104,15 @@ fun EditDJProfileScreen(
 
     Scaffold(
         topBar = {
-            TopAppBar(
-                title = { Text("Editar Perfil") },
+            CenterAlignedTopAppBar(
+                title = {
+                    Text(
+                        "Editar Perfil",
+                        style = MaterialTheme.typography.titleLarge,
+                        fontWeight = FontWeight.Bold,
+                        color = TextPrimary
+                    )
+                },
                 navigationIcon = {
                     IconButton(onClick = onNavigateBack) {
                         Icon(Icons.AutoMirrored.Filled.ArrowBack, contentDescription = "Volver")
@@ -131,7 +138,8 @@ fun EditDJProfileScreen(
                         Icon(Icons.Default.Check, contentDescription = "Guardar", tint = if (isFormValid) NeonPink else TextSecondary)
                     }
                 },
-                colors = TopAppBarDefaults.topAppBarColors(containerColor = DeepBlack)
+                colors = TopAppBarDefaults.centerAlignedTopAppBarColors(containerColor = DeepBlack),
+                modifier = Modifier.height(56.dp)
             )
         },
         snackbarHost = { SnackbarHost(snackbarHostState) },

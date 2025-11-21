@@ -108,7 +108,6 @@ fun DJMainScreen(
                     DJScreen.HOME -> {
                         EventsMainScreen(
                             viewModel = viewModel,
-                            onLogout = onLogout,
                             onAddEvent = onAddEvent,
                             onProfile = null, // Profile via bottom bar
                             showOnlyList = true,
@@ -144,6 +143,7 @@ fun DJMainScreen(
                             com.example.djeventhub.ui.dj.profile.DJProfileScreen(
                                 onNavigateBack = { currentScreen = DJScreen.HOME },
                                 onEdit = { showEditProfile = true },
+                                onLogout = onLogout,
                                 showTopBar = true
                             )
                         }

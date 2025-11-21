@@ -3,6 +3,7 @@ package com.example.djeventhub.ui.productora
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.example.djeventhub.EventRepository
+import com.example.djeventhub.data.ChatRepository
 import com.example.djeventhub.data.UserRepository
 import com.example.djeventhub.models.User
 import dagger.hilt.android.lifecycle.HiltViewModel
@@ -14,7 +15,8 @@ import javax.inject.Inject
 @HiltViewModel
 class ApplicationsViewModel @Inject constructor(
     private val eventRepository: EventRepository,
-    private val userRepository: UserRepository
+    private val userRepository: UserRepository,
+    private val chatRepository: ChatRepository
 ) : ViewModel() {
 
     private val _applicants = MutableStateFlow<List<User>>(emptyList())
@@ -23,24 +25,27 @@ class ApplicationsViewModel @Inject constructor(
     private val _isLoading = MutableStateFlow(false)
     val isLoading: StateFlow<Boolean> = _isLoading
 
+    private val _actionResult = MutableStateFlow<String?>(null)
+    val actionResult: StateFlow<String?> = _actionResult
+
     fun loadApplicants(eventId: String) {
         viewModelScope.launch {
             _isLoading.value = true
             try {
                 // Get event to retrieve applicant IDs
                 val event = eventRepository.getEventById(eventId)
-                
+
                 if (event != null && event.applicants.isNotEmpty()) {
                     // Fetch user profiles for each applicant
                     val applicantProfiles = mutableListOf<User>()
-                    
+
                     event.applicants.forEach { userId ->
                         val user = userRepository.getUserById(userId)
                         if (user != null) {
                             applicantProfiles.add(user)
                         }
                     }
-                    
+
                     // Sort by rating (highest first)
                     _applicants.value = applicantProfiles.sortedByDescending { it.rating }
                 } else {
@@ -51,6 +56,45 @@ class ApplicationsViewModel @Inject constructor(
             } finally {
                 _isLoading.value = false
             }
+        }
+    }
+
+    fun acceptApplicant(eventId: String, djId: String) {
+        viewModelScope.launch {
+            _isLoading.value = true
+            try {
+                val result = eventRepository.acceptApplication(eventId, djId)
+                result.fold(
+                    onSuccess = {
+                        // After accepting, ensure a chat exists between productora and the DJ
+                        try {
+                            val djProfile = userRepository.getUserById(djId)
+                            val otherName = djProfile?.artistName ?: djProfile?.displayName ?: "DJ"
+                            val otherImage = djProfile?.profileImageUrl
+                            val chatId = chatRepository.getOrCreateChat(djId, otherName, otherImage)
+                            _actionResult.value = "accepted:$djId,chat:$chatId"
+                        } catch (e: Exception) {
+                            // If chat creation fails, still mark accepted but surface warning
+                            _actionResult.value = "accepted:$djId,chat_error:${e.message}"
+                        }
+                    },
+                    onFailure = { e ->
+                        _actionResult.value = "error:${e.message}"
+                    }
+                )
+            } catch (e: Exception) {
+                _actionResult.value = "error:${e.message}"
+            } finally {
+                _isLoading.value = false
+            }
+        }
+    }
+
+    suspend fun getOrCreateChat(otherUserId: String, otherUserName: String, otherUserImage: String?): String? {
+        return try {
+            chatRepository.getOrCreateChat(otherUserId, otherUserName, otherUserImage)
+        } catch (e: Exception) {
+            null
         }
     }
 }

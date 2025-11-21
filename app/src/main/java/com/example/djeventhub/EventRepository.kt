@@ -206,11 +206,21 @@ class EventRepository(
     suspend fun applyToEvent(eventId: String): Result<Unit> {
         return try {
             val currentUserId = auth.currentUser?.uid ?: return Result.failure(Exception("Usuario no autenticado"))
-            
+
+            // Check if event is in the future
+            val eventDoc = eventsCollection.document(eventId).get().await()
+            val eventDate = eventDoc.getLong("date") ?: 0L
+            val endDate = eventDoc.getLong("endDate")
+            val now = System.currentTimeMillis()
+            val effectiveEnd = endDate ?: eventDate
+            if (effectiveEnd < now) {
+                return Result.failure(Exception("No puedes postular a eventos que ya pasaron"))
+            }
+
             eventsCollection.document(eventId)
                 .update("applicants", FieldValue.arrayUnion(currentUserId))
                 .await()
-            
+
             Result.success(Unit)
         } catch (e: Exception) {
             Result.failure(e)
@@ -223,11 +233,42 @@ class EventRepository(
     suspend fun removeApplication(eventId: String): Result<Unit> {
         return try {
             val currentUserId = auth.currentUser?.uid ?: return Result.failure(Exception("Usuario no autenticado"))
-            
+
             eventsCollection.document(eventId)
                 .update("applicants", FieldValue.arrayRemove(currentUserId))
                 .await()
-            
+
+            Result.success(Unit)
+        } catch (e: Exception) {
+            Result.failure(e)
+        }
+    }
+
+    /**
+     * Accept a DJ application: set selectedDJ and update event doc
+     */
+    suspend fun acceptApplication(eventId: String, djId: String): Result<Unit> {
+        return try {
+            // Set selectedDJ and remove others? Keep applicants but set selectedDJ
+            eventsCollection.document(eventId)
+                .update(mapOf(
+                    "selectedDJ" to djId
+                ))
+                .await()
+
+            Result.success(Unit)
+        } catch (e: Exception) {
+            Result.failure(e)
+        }
+    }
+
+    /**
+     * Mark event as completed and optionally increment counters (not used immediately)
+     */
+    suspend fun markEventCompleted(eventId: String): Result<Unit> {
+        return try {
+            // Implementation detail: could move to a scheduled job or manual trigger
+            eventsCollection.document(eventId).update("completed", true).await()
             Result.success(Unit)
         } catch (e: Exception) {
             Result.failure(e)

@@ -22,6 +22,7 @@ import androidx.hilt.navigation.compose.hiltViewModel
 import coil.compose.AsyncImage
 import com.example.djeventhub.models.User
 import com.example.djeventhub.ui.theme.*
+import kotlinx.coroutines.launch
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -30,13 +31,26 @@ fun ApplicationsListScreen(
     eventName: String,
     onNavigateBack: () -> Unit,
     onViewDJProfile: (String) -> Unit,
+    onOpenChat: (String, String) -> Unit,
+    onAcceptApplicant: (String) -> Unit,
     viewModel: ApplicationsViewModel = hiltViewModel()
 ) {
     val applicants by viewModel.applicants.collectAsState()
     val isLoading by viewModel.isLoading.collectAsState()
-    
+    val actionResult by viewModel.actionResult.collectAsState()
+    val coroutineScope = rememberCoroutineScope()
+
     LaunchedEffect(eventId) {
         viewModel.loadApplicants(eventId)
+    }
+
+    LaunchedEffect(actionResult) {
+        actionResult?.let { result ->
+            // If accepted, reload applicants
+            if (result.startsWith("accepted:")) {
+                viewModel.loadApplicants(eventId)
+            }
+        }
     }
 
     Scaffold(
@@ -101,11 +115,23 @@ fun ApplicationsListScreen(
                                 modifier = Modifier.padding(bottom = 8.dp)
                             )
                         }
-                        
+
                         items(applicants) { dj ->
                             DJApplicantCard(
                                 dj = dj,
-                                onViewProfile = { onViewDJProfile(dj.uid) }
+                                onViewProfile = { onViewDJProfile(dj.uid) },
+                                onContact = {
+                                    // Create or get chat then call onOpenChat
+                                    coroutineScope.launch {
+                                        val chatId = viewModel.getOrCreateChat(dj.uid, dj.artistName ?: dj.displayName, dj.profileImageUrl)
+                                        if (chatId != null) {
+                                            onOpenChat(chatId, dj.artistName ?: dj.displayName)
+                                        }
+                                    }
+                                },
+                                onAccept = {
+                                    onAcceptApplicant(dj.uid)
+                                }
                             )
                         }
                     }
@@ -119,10 +145,12 @@ fun ApplicationsListScreen(
 @Composable
 fun DJApplicantCard(
     dj: User,
-    onViewProfile: () -> Unit
+    onViewProfile: () -> Unit,
+    onContact: () -> Unit,
+    onAccept: () -> Unit
 ) {
     var expanded by remember { mutableStateOf(false) }
-    
+
     Card(
         modifier = Modifier
             .fillMaxWidth()
@@ -175,9 +203,9 @@ fun DJApplicantCard(
                         }
                     }
                 }
-                
+
                 Spacer(modifier = Modifier.width(16.dp))
-                
+
                 // Info
                 Column(modifier = Modifier.weight(1f)) {
                     Text(
@@ -186,9 +214,9 @@ fun DJApplicantCard(
                         fontWeight = FontWeight.Bold,
                         color = TextPrimary
                     )
-                    
+
                     Spacer(modifier = Modifier.height(4.dp))
-                    
+
                     // Rating
                     Row(verticalAlignment = Alignment.CenterVertically) {
                         Icon(
@@ -210,7 +238,7 @@ fun DJApplicantCard(
                             color = TextTertiary
                         )
                     }
-                    
+
                     // Music genres preview
                     if (dj.musicGenres.isNotEmpty()) {
                         Spacer(modifier = Modifier.height(4.dp))
@@ -222,14 +250,14 @@ fun DJApplicantCard(
                         )
                     }
                 }
-                
+
                 Icon(
                     if (expanded) Icons.Default.KeyboardArrowUp else Icons.Default.KeyboardArrowDown,
                     contentDescription = null,
                     tint = TextSecondary
                 )
             }
-            
+
             // Expanded details
             AnimatedVisibility(visible = expanded) {
                 Column(
@@ -238,9 +266,9 @@ fun DJApplicantCard(
                         .padding(top = 16.dp)
                 ) {
                     Divider(color = TextTertiary.copy(alpha = 0.2f))
-                    
+
                     Spacer(modifier = Modifier.height(16.dp))
-                    
+
                     // Bio
                     if (!dj.bio.isNullOrBlank()) {
                         Text(
@@ -258,7 +286,7 @@ fun DJApplicantCard(
                         )
                         Spacer(modifier = Modifier.height(12.dp))
                     }
-                    
+
                     // All genres
                     if (dj.musicGenres.isNotEmpty()) {
                         Text(
@@ -288,27 +316,43 @@ fun DJApplicantCard(
                         }
                         Spacer(modifier = Modifier.height(12.dp))
                     }
-                    
-                    // View profile button
+
+                    // Actions row: View profile, Contact, Accept
+                    Row(modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+                        Button(
+                            onClick = onViewProfile,
+                            modifier = Modifier.weight(1f),
+                            colors = ButtonDefaults.buttonColors(containerColor = NeonPink),
+                            shape = RoundedCornerShape(8.dp)
+                        ) {
+                            Icon(Icons.Default.Person, contentDescription = null, modifier = Modifier.size(18.dp))
+                            Spacer(modifier = Modifier.width(8.dp))
+                            Text("Ver perfil")
+                        }
+
+                        Button(
+                            onClick = onContact,
+                            modifier = Modifier.weight(1f),
+                            colors = ButtonDefaults.buttonColors(containerColor = ElectricBlue),
+                            shape = RoundedCornerShape(8.dp)
+                        ) {
+                            Icon(Icons.Default.Email, contentDescription = null, modifier = Modifier.size(18.dp))
+                            Spacer(modifier = Modifier.width(8.dp))
+                            Text("Contactar")
+                        }
+                    }
+
+                    Spacer(modifier = Modifier.height(8.dp))
+
                     Button(
-                        onClick = onViewProfile,
+                        onClick = onAccept,
                         modifier = Modifier.fillMaxWidth(),
-                        colors = ButtonDefaults.buttonColors(
-                            containerColor = NeonPink
-                        ),
-                        shape = RoundedCornerShape(12.dp)
+                        colors = ButtonDefaults.buttonColors(containerColor = NeonPink),
+                        shape = RoundedCornerShape(8.dp)
                     ) {
-                        Icon(
-                            Icons.Default.Person,
-                            contentDescription = null,
-                            modifier = Modifier.size(20.dp)
-                        )
+                        Icon(Icons.Default.Check, contentDescription = null, modifier = Modifier.size(18.dp))
                         Spacer(modifier = Modifier.width(8.dp))
-                        Text(
-                            text = "Ver perfil completo",
-                            style = MaterialTheme.typography.bodyMedium,
-                            fontWeight = FontWeight.Bold
-                        )
+                        Text("Aceptar postulacion")
                     }
                 }
             }

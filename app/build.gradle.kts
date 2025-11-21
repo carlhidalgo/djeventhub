@@ -154,6 +154,9 @@ dependencies {
     // Accompanist permissions
     implementation("com.google.accompanist:accompanist-permissions:0.30.1")
 
+    // Accompanist swipe-to-refresh (used by EventListScreen)
+    implementation("com.google.accompanist:accompanist-swiperefresh:0.30.1")
+
     // Image loading for Compose (profile pictures)
     implementation("io.coil-kt:coil-compose:2.4.0")
 

@@ -112,7 +112,6 @@ fun ProductoraMainScreen(
                     ProductoraScreen.HOME -> {
                         EventsMainScreen(
                             viewModel = viewModel,
-                            onLogout = onLogout,
                             onAddEvent = onAddEvent,
                             onProfile = onProfile,
                             showOnlyList = true,
@@ -128,7 +127,10 @@ fun ProductoraMainScreen(
                         )
                     }
                     ProductoraScreen.CHAT -> {
-                        ChatPlaceholderScreen()
+                        com.example.djeventhub.ui.chat.ChatListScreen(
+                            onNavigateBack = null,
+                            onChatClick = { /* Navigate to chat detail if needed */ }
+                        )
                     }
                     ProductoraScreen.PROFILE -> {
                         if (editing) {
@@ -139,6 +141,7 @@ fun ProductoraMainScreen(
                             com.example.djeventhub.ui.productora.profile.ProductoraProfileScreen(
                                 onNavigateBack = { currentScreen = ProductoraScreen.HOME },
                                 onEdit = { showEditProfile = true },
+                                onLogout = onLogout,
                                 showTopBar = true
                             )
                         }
@@ -157,11 +160,19 @@ fun ProductoraMainScreen(
 fun SearchDJsPlaceholderScreen(onSearch: () -> Unit) {
     Scaffold(
         topBar = {
-            TopAppBar(
-                title = { Text("Buscar DJs") },
-                colors = TopAppBarDefaults.topAppBarColors(
+            CenterAlignedTopAppBar(
+                title = {
+                    Text(
+                        "Buscar DJs",
+                        style = MaterialTheme.typography.titleLarge,
+                        fontWeight = androidx.compose.ui.text.font.FontWeight.Bold,
+                        color = com.example.djeventhub.ui.theme.TextPrimary
+                    )
+                },
+                colors = TopAppBarDefaults.centerAlignedTopAppBarColors(
                     containerColor = com.example.djeventhub.ui.theme.DeepBlack
-                )
+                ),
+                modifier = Modifier.height(56.dp)
             )
         },
         containerColor = com.example.djeventhub.ui.theme.DeepBlack
@@ -217,11 +228,19 @@ fun SearchDJsPlaceholderScreen(onSearch: () -> Unit) {
 fun ChatPlaceholderScreen() {
     Scaffold(
         topBar = {
-            TopAppBar(
-                title = { Text("Mensajes") },
-                colors = TopAppBarDefaults.topAppBarColors(
+            CenterAlignedTopAppBar(
+                title = {
+                    Text(
+                        "Mensajes",
+                        style = MaterialTheme.typography.titleLarge,
+                        fontWeight = androidx.compose.ui.text.font.FontWeight.Bold,
+                        color = com.example.djeventhub.ui.theme.TextPrimary
+                    )
+                },
+                colors = TopAppBarDefaults.centerAlignedTopAppBarColors(
                     containerColor = com.example.djeventhub.ui.theme.DeepBlack
-                )
+                ),
+                modifier = Modifier.height(56.dp)
             )
         },
         containerColor = com.example.djeventhub.ui.theme.DeepBlack
@@ -266,16 +285,24 @@ fun ProductoraProfilePlaceholderScreen(
 ) {
     Scaffold(
         topBar = {
-            TopAppBar(
-                title = { Text("Mi Perfil") },
+            CenterAlignedTopAppBar(
+                title = {
+                    Text(
+                        "Mi Perfil",
+                        style = MaterialTheme.typography.titleLarge,
+                        fontWeight = androidx.compose.ui.text.font.FontWeight.Bold,
+                        color = com.example.djeventhub.ui.theme.TextPrimary
+                    )
+                },
                 navigationIcon = {
                     IconButton(onClick = onNavigateBack) {
                         Icon(Icons.AutoMirrored.Filled.ArrowBack, contentDescription = "Volver")
                     }
                 },
-                colors = TopAppBarDefaults.topAppBarColors(
+                colors = TopAppBarDefaults.centerAlignedTopAppBarColors(
                     containerColor = com.example.djeventhub.ui.theme.DeepBlack
-                )
+                ),
+                modifier = Modifier.height(56.dp)
             )
         },
         containerColor = com.example.djeventhub.ui.theme.DeepBlack

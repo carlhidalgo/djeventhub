@@ -12,6 +12,7 @@ import androidx.compose.foundation.layout.windowInsetsPadding
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.*
+import androidx.compose.material.icons.automirrored.filled.ExitToApp
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
@@ -23,6 +24,7 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.example.djeventhub.Event
 import com.example.djeventhub.EventListViewModel
+import com.example.djeventhub.ui.theme.*
 import com.google.android.gms.maps.model.CameraPosition
 import com.google.android.gms.maps.model.LatLng
 import com.google.maps.android.compose.*
@@ -33,8 +35,7 @@ import com.google.accompanist.permissions.rememberPermissionState
 @OptIn(ExperimentalPermissionsApi::class, ExperimentalMaterial3Api::class)
 @Composable
 fun MapScreen(
-    viewModel: EventListViewModel,
-    onLogout: (() -> Unit)? = null
+    viewModel: EventListViewModel
 ) {
     val events by viewModel.events.collectAsState()
     val userLocation by viewModel.userLocation.collectAsState()
@@ -75,44 +76,22 @@ fun MapScreen(
 
     Scaffold(
         topBar = {
-            Surface(
-                modifier = Modifier.fillMaxWidth(),
-                color = MaterialTheme.colorScheme.surface
-            ) {
-                Row(
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .windowInsetsPadding(WindowInsets.statusBars)
-                        .height(40.dp)
-                        .padding(horizontal = 4.dp),
-                    horizontalArrangement = Arrangement.SpaceBetween,
-                    verticalAlignment = Alignment.CenterVertically
-                ) {
+            CenterAlignedTopAppBar(
+                title = {
                     Text(
                         "DJ Event Hub",
-                        style = MaterialTheme.typography.bodyMedium,
-                        maxLines = 1,
-                        modifier = Modifier.padding(start = 8.dp)
+                        style = MaterialTheme.typography.titleLarge,
+                        fontWeight = FontWeight.Bold,
+                        color = com.example.djeventhub.ui.theme.TextPrimary
                     )
-                    Row {
-                        IconButton(
-                            onClick = { viewModel.refreshLocation() },
-                            modifier = Modifier.size(32.dp)
-                        ) {
-                            Icon(Icons.Default.Refresh, contentDescription = "Actualizar ubicación", modifier = Modifier.size(18.dp))
-                        }
-                        if (onLogout != null) {
-                            IconButton(
-                                onClick = onLogout,
-                                modifier = Modifier.size(32.dp)
-                            ) {
-                                Icon(Icons.Filled.ExitToApp, contentDescription = "Cerrar sesión", modifier = Modifier.size(18.dp))
-                            }
-                        }
-                    }
-                }
-            }
-        }
+                },
+                colors = TopAppBarDefaults.centerAlignedTopAppBarColors(
+                    containerColor = com.example.djeventhub.ui.theme.DeepBlack
+                ),
+                modifier = Modifier.height(56.dp)
+            )
+        },
+        containerColor = com.example.djeventhub.ui.theme.DeepBlack
     ) { paddingValues ->
     Box(
         modifier = Modifier

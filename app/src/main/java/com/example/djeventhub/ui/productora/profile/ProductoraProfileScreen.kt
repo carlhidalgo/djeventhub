@@ -12,6 +12,7 @@ import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
+import androidx.compose.material.icons.automirrored.filled.ExitToApp
 import androidx.compose.material.icons.filled.AccountCircle
 import androidx.compose.material.icons.filled.Edit
 import androidx.compose.material3.*
@@ -31,6 +32,7 @@ import com.example.djeventhub.ui.theme.*
 fun ProductoraProfileScreen(
     onNavigateBack: () -> Unit,
     onEdit: () -> Unit,
+    onLogout: () -> Unit = {},
     viewModel: ProductoraProfileViewModel = hiltViewModel(),
     showTopBar: Boolean = true
 ) {
@@ -43,11 +45,13 @@ fun ProductoraProfileScreen(
     Scaffold(
         topBar = {
             if (showTopBar) {
-                TopAppBar(
+                CenterAlignedTopAppBar(
                     title = {
                         Text(
                             "Mi Perfil",
-                            style = MaterialTheme.typography.titleMedium
+                            style = MaterialTheme.typography.titleLarge,
+                            fontWeight = FontWeight.Bold,
+                            color = TextPrimary
                         )
                     },
                     navigationIcon = {
@@ -71,10 +75,10 @@ fun ProductoraProfileScreen(
                             }
                         }
                     },
-                    colors = TopAppBarDefaults.topAppBarColors(
+                    colors = TopAppBarDefaults.centerAlignedTopAppBarColors(
                         containerColor = DeepBlack
                     ),
-                    modifier = Modifier.height(48.dp)
+                    modifier = Modifier.height(56.dp)
                 )
             }
         },
@@ -111,6 +115,7 @@ fun ProductoraProfileScreen(
                 ProductoraProfileContent(
                     user = state.user,
                     onPickImage = { launcher.launch("image/*") },
+                    onLogout = onLogout,
                     modifier = Modifier.padding(padding)
                 )
             }
@@ -119,7 +124,12 @@ fun ProductoraProfileScreen(
 }
 
 @Composable
-fun ProductoraProfileContent(user: User, onPickImage: () -> Unit, modifier: Modifier = Modifier) {
+fun ProductoraProfileContent(
+    user: User,
+    onPickImage: () -> Unit,
+    onLogout: () -> Unit,
+    modifier: Modifier = Modifier
+) {
     Column(
         modifier = modifier
             .fillMaxSize()
@@ -152,6 +162,35 @@ fun ProductoraProfileContent(user: User, onPickImage: () -> Unit, modifier: Modi
         } else {
             ProductoraPlaceholderCard(title = "Contacto", message = "Añade tu información de contacto")
         }
+
+        Spacer(modifier = Modifier.height(24.dp))
+
+        // Logout button
+        OutlinedButton(
+            onClick = onLogout,
+            modifier = Modifier
+                .fillMaxWidth()
+                .height(48.dp),
+            colors = ButtonDefaults.outlinedButtonColors(
+                contentColor = ErrorRed
+            ),
+            border = androidx.compose.foundation.BorderStroke(1.dp, ErrorRed),
+            shape = RoundedCornerShape(12.dp)
+        ) {
+            Icon(
+                Icons.AutoMirrored.Filled.ExitToApp,
+                contentDescription = "Cerrar sesión",
+                modifier = Modifier.size(20.dp)
+            )
+            Spacer(modifier = Modifier.width(8.dp))
+            Text(
+                text = "Cerrar sesión",
+                style = MaterialTheme.typography.bodyLarge,
+                fontWeight = FontWeight.Medium
+            )
+        }
+
+        Spacer(modifier = Modifier.height(32.dp))
     }
 }
 
