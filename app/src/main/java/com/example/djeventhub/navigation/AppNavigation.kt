@@ -19,6 +19,8 @@ import com.example.djeventhub.ui.dj.DJHomeScreen
 import com.example.djeventhub.ui.productora.ProductoraHomeScreen
 import com.example.djeventhub.ui.roleselection.RoleSelectionScreen
 import com.google.firebase.auth.FirebaseAuth
+import com.google.firebase.firestore.FirebaseFirestore
+import com.google.firebase.storage.FirebaseStorage
 import kotlinx.coroutines.launch
 
 sealed class Screen(val route: String) {
@@ -55,8 +57,11 @@ fun AppNavigation(
 
     // Determine start destination based on auth and profile status
     LaunchedEffect(Unit) {
-        val userRepository = UserRepository()
-        val currentUser = FirebaseAuth.getInstance().currentUser
+        val firestore = FirebaseFirestore.getInstance()
+        val auth = FirebaseAuth.getInstance()
+        val storage = FirebaseStorage.getInstance()
+        val userRepository = UserRepository(firestore, auth, storage)
+        val currentUser = auth.currentUser
         startDestination = if (currentUser == null) {
             Screen.Login.route
         } else {
@@ -86,7 +91,10 @@ fun AppNavigation(
                 onAuthenticated = { _ ->
                     // After login, poll for the user profile to avoid racing with Firestore writes
                     scope.launch {
-                        val userRepository = UserRepository()
+                        val firestore = FirebaseFirestore.getInstance()
+                        val auth = FirebaseAuth.getInstance()
+                        val storage = FirebaseStorage.getInstance()
+                        val userRepository = UserRepository(firestore, auth, storage)
                         var userProfile = userRepository.getCurrentUserProfile()
                         var attempts = 0
                         // Retry a few times while waiting for profile to be available (e.g., after sign-up)
@@ -121,7 +129,10 @@ fun AppNavigation(
                 onRoleSelected = {
                     // After selecting role, navigate to appropriate home
                     scope.launch {
-                        val userRepository = UserRepository()
+                        val firestore = FirebaseFirestore.getInstance()
+                        val auth = FirebaseAuth.getInstance()
+                        val storage = FirebaseStorage.getInstance()
+                        val userRepository = UserRepository(firestore, auth, storage)
                         val userProfile = userRepository.getCurrentUserProfile()
                         val destination = when (userProfile?.userType) {
                             UserType.DJ -> Screen.DJHome.route

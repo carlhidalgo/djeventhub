@@ -3,8 +3,11 @@ package com.example.djeventhub.ui.chat
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.example.djeventhub.data.ChatRepository
+import com.example.djeventhub.data.UserRepository
 import com.example.djeventhub.models.Message
 import com.google.firebase.auth.FirebaseAuth
+import com.google.firebase.firestore.FirebaseFirestore
+import com.google.firebase.storage.FirebaseStorage
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.launch
@@ -16,8 +19,12 @@ sealed class ChatUiState {
 }
 
 class ChatViewModel(private val chatId: String) : ViewModel() {
-    private val chatRepository = ChatRepository()
-    private val currentUserId = FirebaseAuth.getInstance().currentUser?.uid ?: ""
+    private val firestore = FirebaseFirestore.getInstance()
+    private val auth = FirebaseAuth.getInstance()
+    private val storage = FirebaseStorage.getInstance()
+    private val userRepository = UserRepository(firestore, auth, storage)
+    private val chatRepository = ChatRepository(firestore, auth, userRepository)
+    private val currentUserId = auth.currentUser?.uid ?: ""
 
     private val _uiState = MutableStateFlow<ChatUiState>(ChatUiState.Loading)
     val uiState: StateFlow<ChatUiState> = _uiState
