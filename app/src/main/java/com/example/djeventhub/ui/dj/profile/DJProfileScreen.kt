@@ -22,7 +22,6 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.draw.scale
-import androidx.compose.ui.graphics.graphicsLayer
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.hilt.navigation.compose.hiltViewModel
@@ -117,6 +116,7 @@ fun DJProfileScreen(
                 DJProfileContent(
                     user = state.user,
                     onPickImage = { launcher.launch("image/*") },
+                    viewModel = viewModel,
                     modifier = Modifier.padding(padding)
                 )
             }
@@ -126,7 +126,12 @@ fun DJProfileScreen(
 
 @OptIn(ExperimentalLayoutApi::class)
 @Composable
-fun DJProfileContent(user: User, onPickImage: () -> Unit, modifier: Modifier = Modifier) {
+fun DJProfileContent(
+    user: User, 
+    onPickImage: () -> Unit, 
+    viewModel: DJProfileViewModel,
+    modifier: Modifier = Modifier
+) {
     Column(
         modifier = modifier
             .fillMaxSize()
@@ -140,6 +145,16 @@ fun DJProfileContent(user: User, onPickImage: () -> Unit, modifier: Modifier = M
         }
 
         Spacer(modifier = Modifier.height(24.dp))
+
+        // Availability toggle - prominent position
+        Box(modifier = Modifier.fadeInWithDelay(50)) {
+            AvailabilityToggleCard(
+                isAvailable = user.isAvailable,
+                onToggle = { viewModel.toggleAvailability(it) }
+            )
+        }
+
+        Spacer(modifier = Modifier.height(16.dp))
 
         // Rating section - always show even if 0
         Box(modifier = Modifier.fadeInWithDelay(100)) {
@@ -538,6 +553,60 @@ fun PlaceholderCard(title: String, message: String) {
                 style = MaterialTheme.typography.bodyMedium,
                 color = TextTertiary,
                 fontStyle = androidx.compose.ui.text.font.FontStyle.Italic
+            )
+        }
+    }
+}
+
+@Composable
+fun AvailabilityToggleCard(isAvailable: Boolean, onToggle: (Boolean) -> Unit) {
+    Card(
+        modifier = Modifier.fillMaxWidth(),
+        shape = RoundedCornerShape(16.dp),
+        colors = CardDefaults.cardColors(
+            containerColor = if (isAvailable) 
+                NeonPink.copy(alpha = 0.15f) 
+            else 
+                DarkSurface
+        ),
+        elevation = CardDefaults.cardElevation(
+            defaultElevation = if (isAvailable) 4.dp else 0.dp
+        )
+    ) {
+        Row(
+            modifier = Modifier
+                .fillMaxWidth()
+                .padding(20.dp),
+            horizontalArrangement = Arrangement.SpaceBetween,
+            verticalAlignment = Alignment.CenterVertically
+        ) {
+            Column(modifier = Modifier.weight(1f)) {
+                Text(
+                    text = "Disponibilidad",
+                    style = MaterialTheme.typography.titleLarge,
+                    color = if (isAvailable) NeonPink else TextPrimary,
+                    fontWeight = FontWeight.Bold
+                )
+                Spacer(modifier = Modifier.height(4.dp))
+                Text(
+                    text = if (isAvailable) 
+                        "Visible para productoras" 
+                    else 
+                        "No visible para productoras",
+                    style = MaterialTheme.typography.bodyMedium,
+                    color = TextSecondary
+                )
+            }
+
+            Switch(
+                checked = isAvailable,
+                onCheckedChange = onToggle,
+                colors = SwitchDefaults.colors(
+                    checkedThumbColor = NeonPink,
+                    checkedTrackColor = NeonPink.copy(alpha = 0.5f),
+                    uncheckedThumbColor = TextTertiary,
+                    uncheckedTrackColor = DarkSurfaceVariant
+                )
             )
         }
     }

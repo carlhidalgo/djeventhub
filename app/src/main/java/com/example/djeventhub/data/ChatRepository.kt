@@ -9,10 +9,15 @@ import kotlinx.coroutines.channels.awaitClose
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.callbackFlow
 import kotlinx.coroutines.tasks.await
+import javax.inject.Inject
+import javax.inject.Singleton
 
-class ChatRepository {
-    private val firestore = FirebaseFirestore.getInstance()
-    private val auth = FirebaseAuth.getInstance()
+@Singleton
+class ChatRepository @Inject constructor(
+    private val firestore: FirebaseFirestore,
+    private val auth: FirebaseAuth,
+    private val userRepository: UserRepository
+) {
     private val chatsCollection = firestore.collection("chats")
 
     /**
@@ -20,7 +25,7 @@ class ChatRepository {
      */
     suspend fun getOrCreateChat(otherUserId: String, otherUserName: String, otherUserImage: String?): String {
         val currentUserId = auth.currentUser?.uid ?: throw IllegalStateException("User not authenticated")
-        val currentUser = UserRepository().getCurrentUserProfile()
+        val currentUser = userRepository.getCurrentUserProfile()
             ?: throw IllegalStateException("User profile not found")
 
         // Create a consistent chat ID (sorted user IDs)
@@ -106,7 +111,7 @@ class ChatRepository {
      */
     suspend fun sendMessage(chatId: String, text: String) {
         val currentUserId = auth.currentUser?.uid ?: return
-        val currentUser = UserRepository().getCurrentUserProfile() ?: return
+        val currentUser = userRepository.getCurrentUserProfile() ?: return
 
         val message = Message(
             chatId = chatId,

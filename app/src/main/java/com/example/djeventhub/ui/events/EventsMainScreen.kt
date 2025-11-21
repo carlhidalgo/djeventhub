@@ -82,9 +82,7 @@ fun EventsMainScreen(
                 EventsTab.MAP -> {
                     MapScreen(
                         viewModel = viewModel,
-                        onLogout = onLogout,
-                        onAddEvent = onAddEvent,
-                        onProfile = onProfile
+                        onLogout = onLogout
                     )
                 }
             }

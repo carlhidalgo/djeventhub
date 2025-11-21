@@ -36,6 +36,12 @@ sealed class Screen(val route: String) {
     object Chat : Screen("chat/{chatId}/{otherUserName}") {
         fun createRoute(chatId: String, otherUserName: String) = "chat/$chatId/$otherUserName"
     }
+    object ApplicationsList : Screen("applications/{eventId}/{eventName}") {
+        fun createRoute(eventId: String, eventName: String) = "applications/$eventId/$eventName"
+    }
+    object PublicDJProfile : Screen("public_dj_profile/{djId}") {
+        fun createRoute(djId: String) = "public_dj_profile/$djId"
+    }
 }
 
 @Composable
@@ -44,12 +50,12 @@ fun AppNavigation(
     authViewModel: AuthViewModel = hiltViewModel(),
     locationManager: LocationManager
 ) {
-    val userRepository = remember { UserRepository() }
     val scope = rememberCoroutineScope()
     var startDestination by remember { mutableStateOf<String?>(null) }
 
     // Determine start destination based on auth and profile status
     LaunchedEffect(Unit) {
+        val userRepository = UserRepository()
         val currentUser = FirebaseAuth.getInstance().currentUser
         startDestination = if (currentUser == null) {
             Screen.Login.route
@@ -78,42 +84,60 @@ fun AppNavigation(
         composable(Screen.Login.route) {
             LoginScreen(
                 onAuthenticated = { _ ->
-                    // After login, check if user has profile
+                    // After login, poll for the user profile to avoid racing with Firestore writes
                     scope.launch {
-                        val userProfile = userRepository.getCurrentUserProfile()
+                        val userRepository = UserRepository()
+                        var userProfile = userRepository.getCurrentUserProfile()
+                        var attempts = 0
+                        // Retry a few times while waiting for profile to be available (e.g., after sign-up)
+                        while ((userProfile == null || userProfile.userType == null) && attempts < 8) {
+                            attempts++
+                            kotlinx.coroutines.delay(500L)
+                            userProfile = userRepository.getCurrentUserProfile()
+                        }
+
                         val destination = when {
                             userProfile == null || userProfile.userType == null -> Screen.RoleSelection.route
                             userProfile.userType == UserType.DJ -> Screen.DJHome.route
                             userProfile.userType == UserType.PRODUCTORA -> Screen.ProductoraHome.route
                             else -> Screen.Login.route
                         }
-                        navController.navigate(destination) {
-                            popUpTo(Screen.Login.route) { inclusive = true }
+
+                        // Avoid navigating if already at the desired destination (prevents double navigation)
+                        val currentRoute = navController.currentBackStackEntry?.destination?.route
+                        if (currentRoute != destination) {
+                            navController.navigate(destination) {
+                                popUpTo(Screen.Login.route) { inclusive = true }
+                            }
                         }
-                    }
-                },
-                viewModel = authViewModel
-            )
-        }
+                     }
+                 },
+                 viewModel = authViewModel
+             )
+         }
 
         composable(Screen.RoleSelection.route) {
             RoleSelectionScreen(
                 onRoleSelected = {
                     // After selecting role, navigate to appropriate home
                     scope.launch {
+                        val userRepository = UserRepository()
                         val userProfile = userRepository.getCurrentUserProfile()
                         val destination = when (userProfile?.userType) {
                             UserType.DJ -> Screen.DJHome.route
                             UserType.PRODUCTORA -> Screen.ProductoraHome.route
                             else -> Screen.Login.route
                         }
-                        navController.navigate(destination) {
-                            popUpTo(Screen.RoleSelection.route) { inclusive = true }
+                        val currentRoute = navController.currentBackStackEntry?.destination?.route
+                        if (currentRoute != destination) {
+                            navController.navigate(destination) {
+                                popUpTo(Screen.RoleSelection.route) { inclusive = true }
+                            }
                         }
-                    }
-                }
-            )
-        }
+                     }
+                 }
+             )
+         }
 
         composable(Screen.DJHome.route) {
             val eventViewModel: EventListViewModel = hiltViewModel()
@@ -158,6 +182,9 @@ fun AppNavigation(
                 },
                 onEventClick = { eventId ->
                     navController.navigate(Screen.EventDetail.createRoute(eventId))
+                },
+                onViewApplicants = { eventId, eventName ->
+                    navController.navigate(Screen.ApplicationsList.createRoute(eventId, eventName))
                 }
             )
         }
@@ -187,6 +214,21 @@ fun AppNavigation(
                     event = it,
                     onNavigateBack = {
                         navController.popBackStack()
+                    },
+                    onApplyToEvent = { eventId ->
+                        scope.launch {
+                            val result = repository.applyToEvent(eventId)
+                            result.fold(
+                                onSuccess = {
+                                    // Refresh event to show updated state
+                                    event = repository.getEventById(eventId)
+                                },
+                                onFailure = { e ->
+                                    // Show error - could use SnackBar
+                                    android.util.Log.e("AppNavigation", "Error applying to event: ${e.message}")
+                                }
+                            )
+                        }
                     }
                 )
             } ?: run {
@@ -219,13 +261,8 @@ fun AppNavigation(
                     navController.popBackStack()
                 },
                 onChatClick = { chatId ->
-                    // Get chat to extract other user name
-                    scope.launch {
-                        val chatRepo = com.example.djeventhub.data.ChatRepository()
-                        val currentUserId = FirebaseAuth.getInstance().currentUser?.uid ?: ""
-                        // For now, navigate with chatId - we'll get the name in the screen
-                        navController.navigate(Screen.Chat.createRoute(chatId, "Chat"))
-                    }
+                    // Navigate with chatId - we'll get the name in the screen
+                    navController.navigate(Screen.Chat.createRoute(chatId, "Chat"))
                 }
             )
         }
@@ -245,6 +282,47 @@ fun AppNavigation(
                 otherUserName = otherUserName,
                 onNavigateBack = {
                     navController.popBackStack()
+                }
+            )
+        }
+
+        composable(
+            route = Screen.ApplicationsList.route,
+            arguments = listOf(
+                androidx.navigation.navArgument("eventId") { type = androidx.navigation.NavType.StringType },
+                androidx.navigation.navArgument("eventName") { type = androidx.navigation.NavType.StringType }
+            )
+        ) { backStackEntry ->
+            val eventId = backStackEntry.arguments?.getString("eventId") ?: ""
+            val eventName = backStackEntry.arguments?.getString("eventName") ?: "Evento"
+
+            com.example.djeventhub.ui.productora.ApplicationsListScreen(
+                eventId = eventId,
+                eventName = eventName,
+                onNavigateBack = {
+                    navController.popBackStack()
+                },
+                onViewDJProfile = { djId ->
+                    navController.navigate(Screen.PublicDJProfile.createRoute(djId))
+                }
+            )
+        }
+
+        composable(
+            route = Screen.PublicDJProfile.route,
+            arguments = listOf(
+                androidx.navigation.navArgument("djId") { type = androidx.navigation.NavType.StringType }
+            )
+        ) { backStackEntry ->
+            val djId = backStackEntry.arguments?.getString("djId") ?: ""
+
+            com.example.djeventhub.ui.dj.profile.PublicDJProfileScreen(
+                djId = djId,
+                onNavigateBack = {
+                    navController.popBackStack()
+                },
+                onContactDJ = {
+                    // TODO: Navigate to chat with DJ
                 }
             )
         }

@@ -79,7 +79,8 @@ fun MyProductoraEventsScreen(
                 items(myCreatedEvents) { eventWithDistance ->
                     ProductoraEventCard(
                         eventWithDistance = eventWithDistance,
-                        onClick = { onEventClick(eventWithDistance.event.id) }
+                        onClick = { onEventClick(eventWithDistance.event.id) },
+                        onViewApplicants = { onViewApplicants(eventWithDistance.event.id, eventWithDistance.event.name) }
                     )
                 }
             }
@@ -89,8 +90,9 @@ fun MyProductoraEventsScreen(
 
 @Composable
 fun ProductoraEventCard(
-    eventWithDistance: EventWithDistance,
-    onClick: () -> Unit
+    eventWithDistance: com.example.djeventhub.EventWithDistance,
+    onClick: () -> Unit,
+    onViewApplicants: () -> Unit
 ) {
     val event = eventWithDistance.event
     val applicantsCount = event.applicants.size
@@ -168,25 +170,55 @@ fun ProductoraEventCard(
                 }
             }
             
-            // Show applicants count
+            // Show applicants count and button to view
             if (applicantsCount > 0) {
                 Spacer(modifier = Modifier.height(12.dp))
-                Row(
-                    verticalAlignment = Alignment.CenterVertically,
-                    horizontalArrangement = Arrangement.spacedBy(4.dp)
+                
+                Button(
+                    onClick = { onViewApplicants() },
+                    modifier = Modifier.fillMaxWidth(),
+                    colors = ButtonDefaults.buttonColors(
+                        containerColor = ElectricBlue
+                    ),
+                    shape = androidx.compose.foundation.shape.RoundedCornerShape(8.dp)
                 ) {
                     Icon(
                         Icons.Default.Person,
                         contentDescription = null,
-                        tint = ElectricBlue,
-                        modifier = Modifier.size(16.dp)
+                        modifier = Modifier.size(20.dp)
                     )
+                    Spacer(modifier = Modifier.width(8.dp))
                     Text(
-                        text = "$applicantsCount ${if (applicantsCount == 1) "postulante" else "postulantes"}",
-                        style = MaterialTheme.typography.labelMedium,
-                        color = ElectricBlue,
-                        fontWeight = FontWeight.Medium
+                        text = "Ver $applicantsCount ${if (applicantsCount == 1) "postulante" else "postulantes"}",
+                        style = MaterialTheme.typography.bodyMedium,
+                        fontWeight = FontWeight.Bold
                     )
+                }
+            } else {
+                Spacer(modifier = Modifier.height(12.dp))
+                Surface(
+                    color = TextTertiary.copy(alpha = 0.1f),
+                    shape = androidx.compose.foundation.shape.RoundedCornerShape(8.dp),
+                    modifier = Modifier.fillMaxWidth()
+                ) {
+                    Row(
+                        modifier = Modifier.padding(12.dp),
+                        horizontalArrangement = Arrangement.Center,
+                        verticalAlignment = Alignment.CenterVertically
+                    ) {
+                        Icon(
+                            Icons.Default.Person,
+                            contentDescription = null,
+                            tint = TextTertiary,
+                            modifier = Modifier.size(16.dp)
+                        )
+                        Spacer(modifier = Modifier.width(8.dp))
+                        Text(
+                            text = "Sin postulantes aún",
+                            style = MaterialTheme.typography.labelMedium,
+                            color = TextTertiary
+                        )
+                    }
                 }
             }
         }

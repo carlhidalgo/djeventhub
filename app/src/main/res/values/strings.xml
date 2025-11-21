@@ -2,4 +2,78 @@
     <string name="app_name">DJEventHub</string>
     <!-- default_web_client_id required by Google Sign-In (from google-services.json oauth_client.client_id) -->
     <string name="default_web_client_id">978908157887-07d6ppkemk9huliqnc12ju6n3nd6ubkp.apps.googleusercontent.com</string>
+
+    <!-- Auth / Login Screen -->
+    <string name="app_tagline">Organiza tus eventos sin estrés</string>
+    <string name="login_title">Iniciar sesión</string>
+    <string name="register_title">Crear cuenta</string>
+    <string name="email_label">Email</string>
+    <string name="password_label">Password</string>
+    <string name="login_button">Entrar</string>
+    <string name="register_button">Registrar</string>
+    <string name="google_signin_button">Continuar con Google</string>
+    <string name="toggle_to_register">¿Nuevo? Regístrate</string>
+    <string name="toggle_to_login">¿Ya tienes cuenta? Inicia sesión</string>
+    <string name="select_role">Selecciona rol:</string>
+    <string name="role_dj">DJ</string>
+    <string name="role_productora">Productora</string>
+    <string name="choose_role_prompt">Elige un rol para continuar</string>
+    <string name="password_show">Ver</string>
+    <string name="password_hide">Ocultar</string>
+
+    <!-- Validation -->
+    <string name="email_required">Email requerido</string>
+    <string name="email_invalid">Formato inválido</string>
+    <string name="password_required">Password requerido</string>
+    <string name="password_min_length">Mínimo 6 caracteres</string>
+
+    <!-- Location Permission -->
+    <string name="permission_location_title">Permiso de ubicación</string>
+    <string name="permission_location_message">DJ Event Hub necesita acceso a tu ubicación para:</string>
+    <string name="permission_location_reason_1">• Ordenar eventos por cercanía</string>
+    <string name="permission_location_reason_2">• Mostrarte la distancia a cada evento</string>
+    <string name="permission_location_denied">Sin este permiso, los eventos se mostrarán sin ordenar por distancia.</string>
+    <string name="permission_request_button">Solicitar permiso</string>
+    <string name="permission_continue_without">Continuar sin ubicación</string>
+
+    <!-- Search -->
+    <string name="search_events_title">Buscar Eventos</string>
+    <string name="search_placeholder">Buscar por nombre, género, ubicación…</string>
+    <string name="all_events_available">Todos los eventos disponibles</string>
+    <string name="search_results">Resultados de búsqueda</string>
+    <string name="no_events_available">No hay eventos disponibles</string>
+    <string name="no_events_found">No se encontraron eventos</string>
+    <string name="try_other_terms">Intenta con otros términos</string>
+
+    <!-- My DJ Events -->
+    <string name="my_applications_title">Mis Postulaciones</string>
+    <string name="no_applications">No te has postulado a ningún evento</string>
+    <string name="explore_events_hint">Explora eventos en Inicio y postúlate</string>
+    <string name="status_selected">¡Seleccionado!</string>
+    <string name="status_applied">Postulado</string>
+
+    <!-- Add Event -->
+    <string name="event_name_required">El nombre y descripción son obligatorios</string>
+    <string name="location_error">No se pudo obtener la ubicación</string>
+    <string name="location_error_detail">Error al obtener ubicación: %s</string>
+    <string name="image_upload_error">Error al subir imagen: %s</string>
+    <string name="event_create_error">Error al crear evento: %s</string>
+
+    <!-- Errors -->
+    <string name="error_not_authenticated">Usuario no autenticado</string>
+    <string name="error_profile_not_found">Perfil de usuario no encontrado</string>
+    <string name="error_event_not_found">Evento no encontrado</string>
+    <string name="error_apply_to_event">Error al postularse</string>
+    <string name="error_remove_application">Error al cancelar postulación</string>
+    <string name="error_loading_event">Error al cargar evento</string>
+
+    <!-- Common -->
+    <string name="loading">Cargando…</string>
+    <string name="error">Error</string>
+    <string name="success">Éxito</string>
+    <string name="cancel">Cancelar</string>
+    <string name="save">Guardar</string>
+    <string name="delete">Eliminar</string>
+    <string name="edit">Editar</string>
+    <string name="search">Buscar</string>
 </resources>

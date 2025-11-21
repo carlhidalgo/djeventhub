@@ -40,7 +40,10 @@ class EventRepository(
                             latitude = doc.getDouble("latitude"),
                             longitude = doc.getDouble("longitude"),
                             imageUrl = doc.getString("imageUrl"),
-                            musicGenre = doc.getString("musicGenre")
+                            musicGenre = doc.getString("musicGenre"),
+                            createdBy = doc.getString("createdBy") ?: "",
+                            applicants = (doc.get("applicants") as? List<*>)?.filterIsInstance<String>() ?: emptyList(),
+                            selectedDJ = doc.getString("selectedDJ")
                         )
                     } catch (e: Exception) {
                         null
@@ -70,7 +73,10 @@ class EventRepository(
                     latitude = doc.getDouble("latitude"),
                     longitude = doc.getDouble("longitude"),
                     imageUrl = doc.getString("imageUrl"),
-                    musicGenre = doc.getString("musicGenre")
+                    musicGenre = doc.getString("musicGenre"),
+                    createdBy = doc.getString("createdBy") ?: "",
+                    applicants = (doc.get("applicants") as? List<*>)?.filterIsInstance<String>() ?: emptyList(),
+                    selectedDJ = doc.getString("selectedDJ")
                 )
             } else {
                 null
@@ -102,7 +108,10 @@ class EventRepository(
                             latitude = doc.getDouble("latitude"),
                             longitude = doc.getDouble("longitude"),
                             imageUrl = doc.getString("imageUrl"),
-                            musicGenre = doc.getString("musicGenre")
+                            musicGenre = doc.getString("musicGenre"),
+                            createdBy = doc.getString("createdBy") ?: "",
+                            applicants = (doc.get("applicants") as? List<*>)?.filterIsInstance<String>() ?: emptyList(),
+                            selectedDJ = doc.getString("selectedDJ")
                         )
                     } catch (e: Exception) {
                         null
@@ -118,6 +127,9 @@ class EventRepository(
      */
     suspend fun addEvent(event: Event): Result<String> {
         return try {
+            val currentUserId = auth.currentUser?.uid
+                ?: return Result.failure(IllegalStateException("Usuario no autenticado"))
+
             val eventData = hashMapOf(
                 "name" to event.name,
                 "description" to event.description,
@@ -128,6 +140,9 @@ class EventRepository(
                 "longitude" to event.longitude,
                 "imageUrl" to event.imageUrl,
                 "musicGenre" to event.musicGenre,
+                "createdBy" to currentUserId,
+                "applicants" to emptyList<String>(),
+                "selectedDJ" to null,
                 "createdAt" to System.currentTimeMillis()
             )
 
@@ -140,29 +155,11 @@ class EventRepository(
 
     /**
      * Get event details by ID (returns null if not found instead of crashing)
+     * @deprecated Use getEventById instead
      */
+    @Deprecated("Use getEventById instead", ReplaceWith("getEventById(id)"))
     suspend fun getEventDetails(id: String): Event? {
-        return try {
-            val doc = eventsCollection.document(id).get().await()
-            if (doc.exists()) {
-                Event(
-                    id = doc.id,
-                    name = doc.getString("name") ?: "",
-                    description = doc.getString("description") ?: "",
-                    date = doc.getLong("date") ?: 0L,
-                    endDate = doc.getLong("endDate"),
-                    locationName = doc.getString("locationName") ?: "",
-                    latitude = doc.getDouble("latitude"),
-                    longitude = doc.getDouble("longitude"),
-                    imageUrl = doc.getString("imageUrl"),
-                    musicGenre = doc.getString("musicGenre")
-                )
-            } else {
-                null
-            }
-        } catch (e: Exception) {
-            null
-        }
+        return getEventById(id)
     }
 
     /**
@@ -179,7 +176,9 @@ class EventRepository(
                 "latitude" to event.latitude,
                 "longitude" to event.longitude,
                 "imageUrl" to event.imageUrl,
-                "musicGenre" to event.musicGenre
+                "musicGenre" to event.musicGenre,
+                "applicants" to event.applicants,
+                "selectedDJ" to event.selectedDJ
             )
 
             eventsCollection.document(event.id).update(eventData as Map<String, Any>).await()

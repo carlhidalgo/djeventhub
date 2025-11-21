@@ -87,7 +87,7 @@ fun MyDJEventsScreen(
 
 @Composable
 fun EventApplicationCard(
-    eventWithDistance: EventWithDistance,
+    eventWithDistance: com.example.djeventhub.EventWithDistance,
     onClick: () -> Unit
 ) {
     val event = eventWithDistance.event

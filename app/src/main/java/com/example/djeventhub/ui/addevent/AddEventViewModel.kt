@@ -26,9 +26,9 @@ sealed class AddEventUiState {
 class AddEventViewModel @Inject constructor(
     application: Application,
     private val repository: EventRepository,
-    private val storageRepository: StorageRepository
+    private val storageRepository: StorageRepository,
+    private val locationManager: LocationManager
 ) : AndroidViewModel(application) {
-    private val locationManager = LocationManager(application.applicationContext)
 
     private val _uiState = MutableStateFlow<AddEventUiState>(AddEventUiState.Idle)
     val uiState: StateFlow<AddEventUiState> = _uiState

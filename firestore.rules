@@ -1,0 +1,131 @@
+rules_version = '2';
+
+service cloud.firestore {
+  match /databases/{database}/documents {
+
+    // Helper functions
+    function isAuthenticated() {
+      return request.auth != null;
+    }
+
+    function isOwner(userId) {
+      return isAuthenticated() && request.auth.uid == userId;
+    }
+
+    function getUserData() {
+      return get(/databases/$(database)/documents/users/$(request.auth.uid)).data;
+    }
+
+    function isDJ() {
+      return isAuthenticated() && getUserData().userType == 'DJ';
+    }
+
+    function isProductora() {
+      return isAuthenticated() && getUserData().userType == 'PRODUCTORA';
+    }
+
+    // Users collection
+    match /users/{userId} {
+      // Anyone authenticated can read user profiles
+      allow read: if isAuthenticated();
+
+      // Users can only create their own profile
+      allow create: if isAuthenticated()
+                    && request.auth.uid == userId
+                    && request.resource.data.uid == userId
+                    && request.resource.data.email == request.auth.token.email;
+
+      // Users can only update their own profile
+      allow update: if isOwner(userId)
+                    && request.resource.data.uid == userId
+                    && request.resource.data.email == resource.data.email; // Email can't change
+
+      // Users can't delete their profile (optional: allow if needed)
+      allow delete: if false;
+    }
+
+    // Events collection
+    match /events/{eventId} {
+      // Anyone authenticated can read events
+      allow read: if isAuthenticated();
+
+      // Only Productoras can create events
+      allow create: if isAuthenticated()
+                    && isProductora()
+                    && request.resource.data.createdBy == request.auth.uid
+                    && request.resource.data.applicants is list
+                    && request.resource.data.applicants.size() == 0;
+
+      // Only the event creator can update basic event info
+      allow update: if isAuthenticated()
+                    && resource.data.createdBy == request.auth.uid
+                    && request.resource.data.createdBy == resource.data.createdBy // Can't change creator
+                    // Allow updating applicants list (DJs applying)
+                    || (isDJ()
+                        && request.resource.data.diff(resource.data).affectedKeys().hasOnly(['applicants'])
+                        && (
+                          // Adding themselves to applicants
+                          (request.resource.data.applicants.toSet().difference(resource.data.applicants.toSet()) == [request.auth.uid].toSet())
+                          ||
+                          // Removing themselves from applicants
+                          (resource.data.applicants.toSet().difference(request.resource.data.applicants.toSet()) == [request.auth.uid].toSet())
+                        )
+                    )
+                    // Allow productora to select a DJ
+                    || (isProductora()
+                        && resource.data.createdBy == request.auth.uid
+                        && request.resource.data.diff(resource.data).affectedKeys().hasOnly(['selectedDJ'])
+                        && request.resource.data.selectedDJ in resource.data.applicants
+                    );
+
+      // Only the event creator can delete events
+      allow delete: if isAuthenticated()
+                    && resource.data.createdBy == request.auth.uid;
+    }
+
+    // Chats collection
+    match /chats/{chatId} {
+      // Users can only read chats they're part of
+      allow read: if isAuthenticated()
+                  && request.auth.uid in resource.data.participantIds;
+
+      // Users can create chats if they're one of the participants
+      allow create: if isAuthenticated()
+                    && request.auth.uid in request.resource.data.participantIds
+                    && request.resource.data.participantIds.size() == 2;
+
+      // Users can update chats they're part of (for sending messages, updating unread count)
+      allow update: if isAuthenticated()
+                    && request.auth.uid in resource.data.participantIds
+                    && request.resource.data.participantIds == resource.data.participantIds; // Can't change participants
+
+      // No one can delete chats (optional: allow if needed)
+      allow delete: if false;
+
+      // Messages subcollection
+      match /messages/{messageId} {
+        // Users can read messages in chats they're part of
+        allow read: if isAuthenticated()
+                    && request.auth.uid in get(/databases/$(database)/documents/chats/$(chatId)).data.participantIds;
+
+        // Users can create messages in chats they're part of
+        allow create: if isAuthenticated()
+                      && request.auth.uid in get(/databases/$(database)/documents/chats/$(chatId)).data.participantIds
+                      && request.resource.data.senderId == request.auth.uid;
+
+        // Users can update their own messages (mark as read)
+        allow update: if isAuthenticated()
+                      && request.auth.uid in get(/databases/$(database)/documents/chats/$(chatId)).data.participantIds
+                      && request.resource.data.diff(resource.data).affectedKeys().hasOnly(['read']);
+
+        // No one can delete messages
+        allow delete: if false;
+      }
+    }
+
+    // Deny all other access by default
+    match /{document=**} {
+      allow read, write: if false;
+    }
+  }
+}

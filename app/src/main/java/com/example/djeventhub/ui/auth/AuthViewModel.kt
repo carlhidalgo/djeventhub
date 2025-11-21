@@ -2,18 +2,14 @@ package com.example.djeventhub.ui.auth
 
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
-import com.google.firebase.auth.AuthResult
-import com.google.firebase.auth.FirebaseAuth
+import com.example.djeventhub.auth.AuthRepository
+import com.example.djeventhub.models.UserType
 import com.google.firebase.auth.GoogleAuthProvider
-import com.google.android.gms.tasks.Task
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.launch
-import kotlinx.coroutines.suspendCancellableCoroutine
 import javax.inject.Inject
-import kotlin.coroutines.resume
-import kotlin.coroutines.resumeWithException
 
 sealed class AuthUiState {
     object Idle : AuthUiState()
@@ -24,28 +20,18 @@ sealed class AuthUiState {
 
 @HiltViewModel
 class AuthViewModel @Inject constructor(
-    private val auth: FirebaseAuth
+    private val authRepo: AuthRepository,
+    private val userRepo: com.example.djeventhub.data.UserRepository
 ) : ViewModel() {
 
     private val _uiState = MutableStateFlow<AuthUiState>(AuthUiState.Idle)
     val uiState: StateFlow<AuthUiState> = _uiState
 
-    private suspend fun <T> awaitTask(task: Task<T>): T = suspendCancellableCoroutine { cont ->
-        task.addOnCompleteListener { t ->
-            if (t.isSuccessful) {
-                cont.resume(t.result as T)
-            } else {
-                cont.resumeWithException(t.exception ?: Exception("Unknown task exception"))
-            }
-        }
-    }
-
     fun signInWithEmail(email: String, password: String) {
         viewModelScope.launch {
             _uiState.value = AuthUiState.Loading
             try {
-                awaitTask(auth.signInWithEmailAndPassword(email, password))
-                val user = auth.currentUser
+                val user = authRepo.signInWithEmail(email, password)
                 if (user != null) {
                     _uiState.value = AuthUiState.Authenticated(user.uid)
                 } else {
@@ -57,19 +43,21 @@ class AuthViewModel @Inject constructor(
         }
     }
 
-    fun signUpWithEmail(email: String, password: String) {
+    /**
+     * Sign up with email and optionally set the user role (DJ or PRODUCTORA).
+     * If userType is null, defaults to DJ to preserve previous behavior.
+     */
+    fun signUpWithEmail(email: String, password: String, userType: UserType? = null) {
         viewModelScope.launch {
             _uiState.value = AuthUiState.Loading
             try {
-                awaitTask(auth.createUserWithEmailAndPassword(email, password))
-                val user = auth.currentUser
+                val user = authRepo.signUpWithEmail(email, password)
                 if (user != null) {
-                    // Auto-create basic user profile in Firestore on sign-up
-                    val userRepo = com.example.djeventhub.data.UserRepository()
+                    // Auto-create basic user profile in Firestore on sign-up with chosen role
                     userRepo.createUserProfile(
                         uid = user.uid,
                         email = user.email ?: "",
-                        userType = com.example.djeventhub.models.UserType.DJ, // Default to DJ, can change later
+                        userType = userType ?: com.example.djeventhub.models.UserType.DJ,
                         displayName = user.email?.substringBefore("@") ?: "DJ"
                     )
                     _uiState.value = AuthUiState.Authenticated(user.uid)
@@ -87,11 +75,9 @@ class AuthViewModel @Inject constructor(
             _uiState.value = AuthUiState.Loading
             try {
                 val credential = GoogleAuthProvider.getCredential(idToken, null)
-                awaitTask(auth.signInWithCredential(credential))
-                val user = auth.currentUser
+                val user = authRepo.signInWithCredential(credential)
                 if (user != null) {
-                    // Create profile if first time Google sign-in
-                    val userRepo = com.example.djeventhub.data.UserRepository()
+                    // Create profile if first time Google sign-in (default to DJ)
                     val existingProfile = userRepo.getCurrentUserProfile()
                     if (existingProfile == null) {
                         userRepo.createUserProfile(
@@ -112,7 +98,7 @@ class AuthViewModel @Inject constructor(
     }
 
     fun signOut() {
-        auth.signOut()
+        authRepo.signOut()
         _uiState.value = AuthUiState.Idle
     }
 

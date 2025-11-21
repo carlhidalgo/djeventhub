@@ -138,4 +138,32 @@ class DJProfileViewModel @Inject constructor(
     }
 
     fun consumeMessage() { _message.value = null }
+
+    fun toggleAvailability(isAvailable: Boolean) {
+        viewModelScope.launch {
+            try {
+                val currentUser = (_uiState.value as? DJProfileUiState.Success)?.user 
+                    ?: userRepository.getCurrentUserProfile()
+                
+                if (currentUser != null) {
+                    val updatedUser = currentUser.copy(isAvailable = isAvailable)
+                    val result = userRepository.updateUserProfile(updatedUser)
+                    
+                    result.fold(
+                        onSuccess = {
+                            _message.value = if (isAvailable) 
+                                "Ahora eres visible para productoras" 
+                            else 
+                                "Ya no eres visible para productoras"
+                        },
+                        onFailure = { e ->
+                            _message.value = "Error al actualizar disponibilidad: ${e.message}"
+                        }
+                    )
+                }
+            } catch (e: Exception) {
+                _message.value = "Error: ${e.message}"
+            }
+        }
+    }
 }

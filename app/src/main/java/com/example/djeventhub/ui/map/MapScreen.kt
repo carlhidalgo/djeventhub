@@ -5,7 +5,6 @@ import android.content.Intent
 import android.net.Uri
 import androidx.compose.animation.*
 import androidx.compose.animation.core.*
-import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.layout.WindowInsets
 import androidx.compose.foundation.layout.statusBars
@@ -18,14 +17,12 @@ import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.scale
-import androidx.compose.ui.graphics.graphicsLayer
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.example.djeventhub.Event
 import com.example.djeventhub.EventListViewModel
-import com.example.djeventhub.ui.animations.bounceClick
 import com.google.android.gms.maps.model.CameraPosition
 import com.google.android.gms.maps.model.LatLng
 import com.google.maps.android.compose.*
@@ -37,9 +34,7 @@ import com.google.accompanist.permissions.rememberPermissionState
 @Composable
 fun MapScreen(
     viewModel: EventListViewModel,
-    onLogout: (() -> Unit)? = null,
-    onAddEvent: (() -> Unit)? = null,
-    onProfile: (() -> Unit)? = null
+    onLogout: (() -> Unit)? = null
 ) {
     val events by viewModel.events.collectAsState()
     val userLocation by viewModel.userLocation.collectAsState()
@@ -111,7 +106,7 @@ fun MapScreen(
                                 onClick = onLogout,
                                 modifier = Modifier.size(32.dp)
                             ) {
-                                Icon(Icons.Default.ExitToApp, contentDescription = "Cerrar sesión", modifier = Modifier.size(18.dp))
+                                Icon(Icons.Filled.ExitToApp, contentDescription = "Cerrar sesión", modifier = Modifier.size(18.dp))
                             }
                         }
                     }

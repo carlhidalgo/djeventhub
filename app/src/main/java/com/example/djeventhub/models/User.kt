@@ -29,6 +29,7 @@ data class User(
     val bio: String? = null,
     val musicGenres: List<String> = emptyList(),
     val availableDays: List<String> = emptyList(), // ["Monday", "Friday", ...]
+    val isAvailable: Boolean = false, // Toggle de disponibilidad para búsqueda
     val rating: Double = 0.0,
     val totalRatings: Int = 0,
     val eventsCompleted: Int = 0,

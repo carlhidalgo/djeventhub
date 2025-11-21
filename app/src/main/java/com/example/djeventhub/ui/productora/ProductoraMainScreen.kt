@@ -33,7 +33,8 @@ fun ProductoraMainScreen(
     onProfile: () -> Unit,
     onSearchDJs: () -> Unit,
     onAddEvent: () -> Unit,
-    onEventClick: (String) -> Unit = {}
+    onEventClick: (String) -> Unit = {},
+    onViewApplicants: (String, String) -> Unit = { _, _ -> }
 ) {
     var currentScreen by remember { mutableStateOf(ProductoraScreen.HOME) }
     var showEditProfile by remember { mutableStateOf(false) }
@@ -122,7 +123,8 @@ fun ProductoraMainScreen(
                         // Show events created by this productora
                         MyProductoraEventsScreen(
                             viewModel = viewModel,
-                            onEventClick = onEventClick
+                            onEventClick = onEventClick,
+                            onViewApplicants = onViewApplicants
                         )
                     }
                     ProductoraScreen.CHAT -> {

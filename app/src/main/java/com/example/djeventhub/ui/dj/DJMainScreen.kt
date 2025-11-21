@@ -18,7 +18,7 @@ import com.example.djeventhub.ui.navigation.InstagramBottomBar
 enum class DJScreen(val route: String) {
     HOME("dj_home"),
     MY_EVENTS("dj_my_events"),
-    ADD("dj_add"),
+    SEARCH("dj_search"),
     CHAT("dj_chat"),
     PROFILE("dj_profile")
 }
@@ -49,10 +49,10 @@ fun DJMainScreen(
             label = "Mis Eventos"
         ),
         BottomNavItem(
-            route = DJScreen.ADD.route,
-            selectedIcon = Icons.Filled.Add,
-            unselectedIcon = Icons.Filled.Add,
-            label = "Agregar",
+            route = DJScreen.SEARCH.route,
+            selectedIcon = Icons.Filled.Search,
+            unselectedIcon = Icons.Outlined.Search,
+            label = "Buscar",
             isCenterItem = true
         ),
         BottomNavItem(
@@ -78,7 +78,7 @@ fun DJMainScreen(
                     when (route) {
                         DJScreen.HOME.route -> { currentScreen = DJScreen.HOME; showEditProfile = false }
                         DJScreen.MY_EVENTS.route -> { currentScreen = DJScreen.MY_EVENTS; showEditProfile = false }
-                        DJScreen.ADD.route -> onAddEvent()
+                        DJScreen.SEARCH.route -> { currentScreen = DJScreen.SEARCH; showEditProfile = false }
                         DJScreen.CHAT.route -> { currentScreen = DJScreen.CHAT; showEditProfile = false }
                         DJScreen.PROFILE.route -> { currentScreen = DJScreen.PROFILE; /* keep showEditProfile as is */ }
                     }
@@ -122,6 +122,13 @@ fun DJMainScreen(
                             onEventClick = onEventClick
                         )
                     }
+                    DJScreen.SEARCH -> {
+                        // Search events screen
+                        SearchEventsScreen(
+                            viewModel = viewModel,
+                            onEventClick = onEventClick
+                        )
+                    }
                     DJScreen.CHAT -> {
                         com.example.djeventhub.ui.chat.ChatListScreen(
                             onNavigateBack = { currentScreen = DJScreen.HOME },
@@ -140,14 +147,6 @@ fun DJMainScreen(
                                 showTopBar = true
                             )
                         }
-                    }
-                    DJScreen.ADD -> {
-                        // Trigger add-event then go back to HOME
-                        LaunchedEffect(Unit) {
-                            onAddEvent()
-                            currentScreen = DJScreen.HOME
-                        }
-                        Spacer(modifier = Modifier.height(0.dp))
                     }
                 }
             }
