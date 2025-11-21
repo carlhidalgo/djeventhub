@@ -65,7 +65,8 @@ fun ApplicationsListScreen(
                 },
                 colors = TopAppBarDefaults.topAppBarColors(
                     containerColor = DeepBlack
-                )
+                ),
+                windowInsets = WindowInsets(0.dp)
             )
         },
         containerColor = DeepBlack

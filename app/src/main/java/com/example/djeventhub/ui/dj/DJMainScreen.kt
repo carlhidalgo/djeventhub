@@ -163,7 +163,8 @@ fun ChatPlaceholderScreen() {
                 title = { Text("Mensajes") },
                 colors = TopAppBarDefaults.topAppBarColors(
                     containerColor = com.example.djeventhub.ui.theme.DeepBlack
-                )
+                ),
+                windowInsets = WindowInsets(0.dp)
             )
         },
         containerColor = com.example.djeventhub.ui.theme.DeepBlack

@@ -79,6 +79,7 @@ fun DJProfileScreen(
                     colors = TopAppBarDefaults.topAppBarColors(
                         containerColor = DeepBlack
                     ),
+                    windowInsets = WindowInsets(0.dp),
                     modifier = Modifier.height(48.dp)
                 )
             }
