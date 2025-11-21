@@ -56,7 +56,7 @@ object AppModule {
         auth: FirebaseAuth,
         storage: FirebaseStorage
     ): UserRepository {
-        return UserRepository()
+        return UserRepository(firestore, auth, storage)
     }
 
     @Provides
@@ -66,7 +66,7 @@ object AppModule {
         auth: FirebaseAuth,
         userRepository: UserRepository
     ): ChatRepository {
-        return ChatRepository()
+        return ChatRepository(firestore, auth, userRepository)
     }
 
     @Provides
