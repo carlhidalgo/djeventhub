@@ -114,6 +114,7 @@ fun ApplicationsListScreen(
     }
 }
 
+@OptIn(ExperimentalLayoutApi::class)
 @Composable
 fun DJApplicantCard(
     dj: User,

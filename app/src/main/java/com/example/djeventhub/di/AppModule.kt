@@ -51,13 +51,21 @@ object AppModule {
 
     @Provides
     @Singleton
-    fun provideUserRepository(): UserRepository {
+    fun provideUserRepository(
+        firestore: FirebaseFirestore,
+        auth: FirebaseAuth,
+        storage: FirebaseStorage
+    ): UserRepository {
         return UserRepository()
     }
 
     @Provides
     @Singleton
-    fun provideChatRepository(): ChatRepository {
+    fun provideChatRepository(
+        firestore: FirebaseFirestore,
+        auth: FirebaseAuth,
+        userRepository: UserRepository
+    ): ChatRepository {
         return ChatRepository()
     }
 

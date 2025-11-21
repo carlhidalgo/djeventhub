@@ -19,7 +19,8 @@ import com.google.firebase.auth.FirebaseAuth
 @Composable
 fun MyProductoraEventsScreen(
     viewModel: EventListViewModel,
-    onEventClick: (String) -> Unit
+    onEventClick: (String) -> Unit,
+    onViewApplicants: (String, String) -> Unit = { _, _ -> }
 ) {
     val events by viewModel.events.collectAsState()
     val currentUserId = FirebaseAuth.getInstance().currentUser?.uid ?: ""
