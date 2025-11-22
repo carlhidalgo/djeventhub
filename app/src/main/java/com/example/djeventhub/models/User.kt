@@ -23,6 +23,7 @@ data class User(
     val location: String? = null,
     val latitude: Double? = null,
     val longitude: Double? = null,
+    val fcmToken: String? = null, // Firebase Cloud Messaging token for push notifications
 
     // DJ specific fields
     val artistName: String? = null,

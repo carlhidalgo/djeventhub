@@ -147,6 +147,11 @@ dependencies {
     implementation("com.google.firebase:firebase-firestore-ktx")
     // Add Firebase Storage for profile images
     implementation("com.google.firebase:firebase-storage-ktx")
+    // Firebase Cloud Messaging for push notifications
+    implementation("com.google.firebase:firebase-messaging-ktx")
+
+    // WorkManager for background tasks (event reminders)
+    implementation("androidx.work:work-runtime-ktx:2.9.0")
 
     // Google Sign-In
     implementation("com.google.android.gms:play-services-auth:20.7.0")
