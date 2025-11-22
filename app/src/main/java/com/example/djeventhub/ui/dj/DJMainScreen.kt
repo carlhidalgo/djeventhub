@@ -10,10 +10,13 @@ import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
-import com.example.djeventhub.EventListViewModel
+import androidx.lifecycle.viewModelScope
+import com.example.djeventhub.ui.events.EventListViewModel
 import com.example.djeventhub.ui.events.EventsMainScreen
 import com.example.djeventhub.ui.navigation.BottomNavItem
 import com.example.djeventhub.ui.navigation.InstagramBottomBar
+import kotlinx.coroutines.launch
+import kotlinx.coroutines.tasks.await
 
 enum class DJScreen(val route: String) {
     HOME("dj_home"),
@@ -34,6 +37,8 @@ fun DJMainScreen(
     var currentScreen by remember { mutableStateOf(DJScreen.HOME) }
     // Flag to show edit profile inside PROFILE tab
     var showEditProfile by remember { mutableStateOf(false) }
+    var openedChatId by remember { mutableStateOf<String?>(null) }
+    var openedChatUserName by remember { mutableStateOf<String?>(null) }
 
     val bottomNavItems = listOf(
         BottomNavItem(
@@ -129,14 +134,43 @@ fun DJMainScreen(
                         )
                     }
                     DJScreen.CHAT -> {
-                        com.example.djeventhub.ui.chat.ChatListScreen(
-                            onNavigateBack = null,
-                            onChatClick = { chatId ->
-                                // TODO: Implement navigation to chat detail
-                                // For now, just log
-                                android.util.Log.d("DJMainScreen", "Chat clicked: $chatId")
-                            }
-                        )
+                        if (openedChatId != null && openedChatUserName != null) {
+                            // Show chat detail
+                            com.example.djeventhub.ui.chat.ChatScreen(
+                                chatId = openedChatId!!,
+                                otherUserName = openedChatUserName!!,
+                                onNavigateBack = {
+                                    openedChatId = null
+                                    openedChatUserName = null
+                                }
+                            )
+                        } else {
+                            // Show chat list
+                            com.example.djeventhub.ui.chat.ChatListScreen(
+                                onNavigateBack = null,
+                                onChatClick = { chatId ->
+                                    // Get chat details to extract other user name
+                                    viewModel.viewModelScope.launch {
+                                        try {
+                                            val chat = com.google.firebase.firestore.FirebaseFirestore.getInstance()
+                                                .collection("chats")
+                                                .document(chatId)
+                                                .get()
+                                                .await()
+                                                .toObject(com.example.djeventhub.models.Chat::class.java)
+
+                                            if (chat != null) {
+                                                val currentUserId = com.google.firebase.auth.FirebaseAuth.getInstance().currentUser?.uid ?: ""
+                                                openedChatId = chatId
+                                                openedChatUserName = chat.getOtherParticipantName(currentUserId)
+                                            }
+                                        } catch (e: Exception) {
+                                            android.util.Log.e("DJMainScreen", "Error loading chat", e)
+                                        }
+                                    }
+                                }
+                            )
+                        }
                     }
                     DJScreen.PROFILE -> {
                         if (editing) {

@@ -22,8 +22,8 @@ import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
-import com.example.djeventhub.Event
-import com.example.djeventhub.EventListViewModel
+import com.example.djeventhub.models.Event
+import com.example.djeventhub.ui.events.EventListViewModel
 import com.example.djeventhub.ui.theme.*
 import com.google.android.gms.maps.model.CameraPosition
 import com.google.android.gms.maps.model.LatLng

@@ -11,8 +11,9 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
-import com.example.djeventhub.EventListViewModel
 import com.example.djeventhub.EventListItem
+import com.example.djeventhub.ui.events.EventListViewModel
+import com.example.djeventhub.ui.events.EventWithDistance
 import com.example.djeventhub.ui.theme.*
 
 @OptIn(ExperimentalMaterial3Api::class)

@@ -1,18 +1,39 @@
-package com.example.djeventhub
+package com.example.djeventhub.data
 
+import com.example.djeventhub.models.Event
 import com.google.firebase.auth.FirebaseAuth
+import com.google.firebase.firestore.DocumentSnapshot
+import com.google.firebase.firestore.FieldValue
 import com.google.firebase.firestore.FirebaseFirestore
 import com.google.firebase.firestore.Query
-import com.google.firebase.firestore.FieldValue
 import kotlinx.coroutines.channels.awaitClose
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.callbackFlow
 import kotlinx.coroutines.tasks.await
+import javax.inject.Inject
+import javax.inject.Singleton
 
-// Repository that centralizes data access for events using Firebase Firestore
-class EventRepository(
-    private val firestore: FirebaseFirestore = FirebaseFirestore.getInstance(),
-    private val auth: FirebaseAuth = FirebaseAuth.getInstance()
+/**
+ * Extension function to convert Firestore DocumentSnapshot to Event model
+ * Eliminates code duplication across the repository
+ */
+fun DocumentSnapshot.toEvent(): Event? {
+    return try {
+        toObject(Event::class.java)
+    } catch (e: Exception) {
+        android.util.Log.e("EventRepository", "Error converting document to Event: ${e.message}", e)
+        null
+    }
+}
+
+/**
+ * Repository that centralizes data access for events using Firebase Firestore.
+ * Uses Hilt for dependency injection.
+ */
+@Singleton
+class EventRepository @Inject constructor(
+    private val firestore: FirebaseFirestore,
+    private val auth: FirebaseAuth
 ) {
     private val eventsCollection = firestore.collection("events")
 
@@ -24,32 +45,12 @@ class EventRepository(
             .orderBy("date", Query.Direction.ASCENDING)
             .addSnapshotListener { snapshot, error ->
                 if (error != null) {
+                    android.util.Log.e("EventRepository", "Error observing events: ${error.message}", error)
                     trySend(emptyList())
                     return@addSnapshotListener
                 }
 
-                val events = snapshot?.documents?.mapNotNull { doc ->
-                    try {
-                        Event(
-                            id = doc.id,
-                            name = doc.getString("name") ?: "",
-                            description = doc.getString("description") ?: "",
-                            date = doc.getLong("date") ?: 0L,
-                            endDate = doc.getLong("endDate"),
-                            locationName = doc.getString("locationName") ?: "",
-                            latitude = doc.getDouble("latitude"),
-                            longitude = doc.getDouble("longitude"),
-                            imageUrl = doc.getString("imageUrl"),
-                            musicGenre = doc.getString("musicGenre"),
-                            createdBy = doc.getString("createdBy") ?: "",
-                            applicants = (doc.get("applicants") as? List<*>)?.filterIsInstance<String>() ?: emptyList(),
-                            selectedDJ = doc.getString("selectedDJ")
-                        )
-                    } catch (e: Exception) {
-                        null
-                    }
-                } ?: emptyList()
-
+                val events = snapshot?.documents?.mapNotNull { it.toEvent() } ?: emptyList()
                 trySend(events)
             }
 
@@ -62,26 +63,9 @@ class EventRepository(
     suspend fun getEventById(eventId: String): Event? {
         return try {
             val doc = eventsCollection.document(eventId).get().await()
-            if (doc.exists()) {
-                Event(
-                    id = doc.id,
-                    name = doc.getString("name") ?: "",
-                    description = doc.getString("description") ?: "",
-                    date = doc.getLong("date") ?: 0L,
-                    endDate = doc.getLong("endDate"),
-                    locationName = doc.getString("locationName") ?: "",
-                    latitude = doc.getDouble("latitude"),
-                    longitude = doc.getDouble("longitude"),
-                    imageUrl = doc.getString("imageUrl"),
-                    musicGenre = doc.getString("musicGenre"),
-                    createdBy = doc.getString("createdBy") ?: "",
-                    applicants = (doc.get("applicants") as? List<*>)?.filterIsInstance<String>() ?: emptyList(),
-                    selectedDJ = doc.getString("selectedDJ")
-                )
-            } else {
-                null
-            }
+            doc.toEvent()
         } catch (e: Exception) {
+            android.util.Log.e("EventRepository", "Error getting event by id: ${e.message}", e)
             null
         }
     }
@@ -96,28 +80,9 @@ class EventRepository(
                 .get()
                 .await()
                 .documents
-                .mapNotNull { doc ->
-                    try {
-                        Event(
-                            id = doc.id,
-                            name = doc.getString("name") ?: "",
-                            description = doc.getString("description") ?: "",
-                            date = doc.getLong("date") ?: 0L,
-                            endDate = doc.getLong("endDate"),
-                            locationName = doc.getString("locationName") ?: "",
-                            latitude = doc.getDouble("latitude"),
-                            longitude = doc.getDouble("longitude"),
-                            imageUrl = doc.getString("imageUrl"),
-                            musicGenre = doc.getString("musicGenre"),
-                            createdBy = doc.getString("createdBy") ?: "",
-                            applicants = (doc.get("applicants") as? List<*>)?.filterIsInstance<String>() ?: emptyList(),
-                            selectedDJ = doc.getString("selectedDJ")
-                        )
-                    } catch (e: Exception) {
-                        null
-                    }
-                }
+                .mapNotNull { it.toEvent() }
         } catch (e: Exception) {
+            android.util.Log.e("EventRepository", "Error getting events: ${e.message}", e)
             emptyList()
         }
     }
@@ -149,17 +114,9 @@ class EventRepository(
             val docRef = eventsCollection.add(eventData).await()
             Result.success(docRef.id)
         } catch (e: Exception) {
+            android.util.Log.e("EventRepository", "Error adding event: ${e.message}", e)
             Result.failure(e)
         }
-    }
-
-    /**
-     * Get event details by ID (returns null if not found instead of crashing)
-     * @deprecated Use getEventById instead
-     */
-    @Deprecated("Use getEventById instead", ReplaceWith("getEventById(id)"))
-    suspend fun getEventDetails(id: String): Event? {
-        return getEventById(id)
     }
 
     /**
@@ -184,6 +141,7 @@ class EventRepository(
             eventsCollection.document(event.id).update(eventData as Map<String, Any>).await()
             Result.success(Unit)
         } catch (e: Exception) {
+            android.util.Log.e("EventRepository", "Error updating event: ${e.message}", e)
             Result.failure(e)
         }
     }
@@ -196,6 +154,7 @@ class EventRepository(
             eventsCollection.document(eventId).delete().await()
             Result.success(Unit)
         } catch (e: Exception) {
+            android.util.Log.e("EventRepository", "Error deleting event: ${e.message}", e)
             Result.failure(e)
         }
     }
@@ -205,15 +164,14 @@ class EventRepository(
      */
     suspend fun applyToEvent(eventId: String): Result<Unit> {
         return try {
-            val currentUserId = auth.currentUser?.uid ?: return Result.failure(Exception("Usuario no autenticado"))
+            val currentUserId = auth.currentUser?.uid
+                ?: return Result.failure(Exception("Usuario no autenticado"))
 
             // Check if event is in the future
-            val eventDoc = eventsCollection.document(eventId).get().await()
-            val eventDate = eventDoc.getLong("date") ?: 0L
-            val endDate = eventDoc.getLong("endDate")
-            val now = System.currentTimeMillis()
-            val effectiveEnd = endDate ?: eventDate
-            if (effectiveEnd < now) {
+            val event = getEventById(eventId)
+                ?: return Result.failure(Exception("Evento no encontrado"))
+
+            if (event.hasEnded()) {
                 return Result.failure(Exception("No puedes postular a eventos que ya pasaron"))
             }
 
@@ -223,6 +181,7 @@ class EventRepository(
 
             Result.success(Unit)
         } catch (e: Exception) {
+            android.util.Log.e("EventRepository", "Error applying to event: ${e.message}", e)
             Result.failure(e)
         }
     }
@@ -232,7 +191,8 @@ class EventRepository(
      */
     suspend fun removeApplication(eventId: String): Result<Unit> {
         return try {
-            val currentUserId = auth.currentUser?.uid ?: return Result.failure(Exception("Usuario no autenticado"))
+            val currentUserId = auth.currentUser?.uid
+                ?: return Result.failure(Exception("Usuario no autenticado"))
 
             eventsCollection.document(eventId)
                 .update("applicants", FieldValue.arrayRemove(currentUserId))
@@ -240,6 +200,7 @@ class EventRepository(
 
             Result.success(Unit)
         } catch (e: Exception) {
+            android.util.Log.e("EventRepository", "Error removing application: ${e.message}", e)
             Result.failure(e)
         }
     }
@@ -249,28 +210,26 @@ class EventRepository(
      */
     suspend fun acceptApplication(eventId: String, djId: String): Result<Unit> {
         return try {
-            // Set selectedDJ and remove others? Keep applicants but set selectedDJ
             eventsCollection.document(eventId)
-                .update(mapOf(
-                    "selectedDJ" to djId
-                ))
+                .update(mapOf("selectedDJ" to djId))
                 .await()
 
             Result.success(Unit)
         } catch (e: Exception) {
+            android.util.Log.e("EventRepository", "Error accepting application: ${e.message}", e)
             Result.failure(e)
         }
     }
 
     /**
-     * Mark event as completed and optionally increment counters (not used immediately)
+     * Mark event as completed
      */
     suspend fun markEventCompleted(eventId: String): Result<Unit> {
         return try {
-            // Implementation detail: could move to a scheduled job or manual trigger
             eventsCollection.document(eventId).update("completed", true).await()
             Result.success(Unit)
         } catch (e: Exception) {
+            android.util.Log.e("EventRepository", "Error marking event as completed: ${e.message}", e)
             Result.failure(e)
         }
     }

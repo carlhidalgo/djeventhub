@@ -2,8 +2,8 @@ package com.example.djeventhub.ui.productora
 
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
-import com.example.djeventhub.EventRepository
 import com.example.djeventhub.data.ChatRepository
+import com.example.djeventhub.data.EventRepository
 import com.example.djeventhub.data.UserRepository
 import com.example.djeventhub.models.User
 import dagger.hilt.android.lifecycle.HiltViewModel
@@ -62,27 +62,34 @@ class ApplicationsViewModel @Inject constructor(
     fun acceptApplicant(eventId: String, djId: String) {
         viewModelScope.launch {
             _isLoading.value = true
+            android.util.Log.d("ApplicationsViewModel", "acceptApplicant: eventId=$eventId, djId=$djId")
             try {
                 val result = eventRepository.acceptApplication(eventId, djId)
                 result.fold(
                     onSuccess = {
+                        android.util.Log.d("ApplicationsViewModel", "Event application accepted, now creating chat")
                         // After accepting, ensure a chat exists between productora and the DJ
                         try {
                             val djProfile = userRepository.getUserById(djId)
                             val otherName = djProfile?.artistName ?: djProfile?.displayName ?: "DJ"
                             val otherImage = djProfile?.profileImageUrl
+                            android.util.Log.d("ApplicationsViewModel", "Creating chat with: name=$otherName, image=$otherImage")
                             val chatId = chatRepository.getOrCreateChat(djId, otherName, otherImage)
+                            android.util.Log.d("ApplicationsViewModel", "Chat created/retrieved: $chatId")
                             _actionResult.value = "accepted:$djId,chat:$chatId"
                         } catch (e: Exception) {
+                            android.util.Log.e("ApplicationsViewModel", "Error creating chat", e)
                             // If chat creation fails, still mark accepted but surface warning
                             _actionResult.value = "accepted:$djId,chat_error:${e.message}"
                         }
                     },
                     onFailure = { e ->
+                        android.util.Log.e("ApplicationsViewModel", "Error accepting application", e)
                         _actionResult.value = "error:${e.message}"
                     }
                 )
             } catch (e: Exception) {
+                android.util.Log.e("ApplicationsViewModel", "Unexpected error in acceptApplicant", e)
                 _actionResult.value = "error:${e.message}"
             } finally {
                 _isLoading.value = false

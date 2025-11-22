@@ -8,11 +8,12 @@ import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
 import androidx.navigation.compose.rememberNavController
 import androidx.navigation.navArgument
-import com.example.djeventhub.EventListViewModel
-import com.example.djeventhub.EventRepository
+import com.example.djeventhub.data.EventRepository
 import com.example.djeventhub.data.UserRepository
 import com.example.djeventhub.location.LocationManager
+import com.example.djeventhub.models.Event
 import com.example.djeventhub.models.UserType
+import com.example.djeventhub.ui.events.EventListViewModel
 import com.example.djeventhub.ui.auth.AuthViewModel
 import com.example.djeventhub.ui.auth.LoginScreen
 import com.example.djeventhub.ui.dj.DJHomeScreen
@@ -213,8 +214,8 @@ fun AppNavigation(
             arguments = listOf(navArgument("eventId") { type = NavType.StringType })
         ) { backStackEntry ->
             val eventId = backStackEntry.arguments?.getString("eventId") ?: ""
-            val repository = remember { EventRepository() }
-            var event by remember { mutableStateOf<com.example.djeventhub.Event?>(null) }
+            val repository = remember { EventRepository(FirebaseFirestore.getInstance(), FirebaseAuth.getInstance()) }
+            var event by remember { mutableStateOf<Event?>(null) }
 
             LaunchedEffect(eventId) {
                 event = repository.getEventById(eventId)
@@ -322,7 +323,7 @@ fun AppNavigation(
                 onAcceptApplicant = { djId ->
                     // accept application via repository using the existing scope
                     scope.launch {
-                        val repo = EventRepository()
+                        val repo = EventRepository(FirebaseFirestore.getInstance(), FirebaseAuth.getInstance())
                         repo.acceptApplication(eventId, djId)
                     }
                 }

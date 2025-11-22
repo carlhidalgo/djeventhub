@@ -8,7 +8,6 @@ import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Modifier
 import com.example.djeventhub.EventListScreen
-import com.example.djeventhub.EventListViewModel
 import com.example.djeventhub.ui.map.MapScreen
 
 enum class EventsTab {

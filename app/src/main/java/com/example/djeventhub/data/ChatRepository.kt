@@ -53,6 +53,7 @@ class ChatRepository @Inject constructor(
                 ),
                 "lastMessage" to "",
                 "lastMessageSenderId" to "",
+                "lastMessageTimestamp" to com.google.firebase.firestore.FieldValue.serverTimestamp(),
                 "createdAt" to com.google.firebase.firestore.FieldValue.serverTimestamp()
             )
             chatsCollection.document(chatId).set(chatData).await()
@@ -67,25 +68,42 @@ class ChatRepository @Inject constructor(
     fun observeUserChats(): Flow<List<Chat>> = callbackFlow {
         val currentUserId = auth.currentUser?.uid
         if (currentUserId == null) {
+            android.util.Log.w("ChatRepository", "observeUserChats: currentUserId is null")
             trySend(emptyList())
             close()
             return@callbackFlow
         }
 
+        android.util.Log.d("ChatRepository", "observeUserChats: Setting up listener for user $currentUserId")
+
         val subscription = chatsCollection
             .whereArrayContains("participantIds", currentUserId)
-            .orderBy("lastMessageTimestamp", Query.Direction.DESCENDING)
             .addSnapshotListener { snapshot, error ->
                 if (error != null) {
+                    android.util.Log.e("ChatRepository", "Error observing chats: ${error.message}", error)
                     trySend(emptyList())
                     return@addSnapshotListener
                 }
 
                 val chats = snapshot?.toObjects(Chat::class.java) ?: emptyList()
-                trySend(chats)
+                android.util.Log.d("ChatRepository", "Snapshot received: ${chats.size} chats")
+                
+                chats.forEachIndexed { index, chat ->
+                    android.util.Log.d("ChatRepository", "  Chat $index: id=${chat.chatId}, participants=${chat.participantIds}, lastMessage='${chat.lastMessage}', createdAt=${chat.createdAt}")
+                }
+
+                // Sort locally by lastMessageTimestamp (nulls last, then by createdAt)
+                val sortedChats = chats.sortedWith(
+                    compareByDescending<Chat> { it.lastMessageTimestamp?.time ?: it.createdAt?.time ?: 0L }
+                )
+                android.util.Log.d("ChatRepository", "Sending ${sortedChats.size} sorted chats to flow")
+                trySend(sortedChats)
             }
 
-        awaitClose { subscription.remove() }
+        awaitClose {
+            android.util.Log.d("ChatRepository", "observeUserChats: Removing listener")
+            subscription.remove()
+        }
     }
 
     /**

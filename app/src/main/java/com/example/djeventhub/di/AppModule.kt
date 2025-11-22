@@ -1,8 +1,8 @@
 package com.example.djeventhub.di
 
 import android.content.Context
-import com.example.djeventhub.EventRepository
 import com.example.djeventhub.data.ChatRepository
+import com.example.djeventhub.data.EventRepository
 import com.example.djeventhub.data.StorageRepository
 import com.example.djeventhub.data.UserRepository
 import com.example.djeventhub.location.LocationManager
@@ -44,9 +44,10 @@ object AppModule {
     @Provides
     @Singleton
     fun provideEventRepository(
-        firestore: FirebaseFirestore
+        firestore: FirebaseFirestore,
+        auth: FirebaseAuth
     ): EventRepository {
-        return EventRepository(firestore)
+        return EventRepository(firestore, auth)
     }
 
     @Provides

@@ -16,7 +16,6 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.viewmodel.compose.viewModel
-import androidx.hilt.navigation.compose.hiltViewModel
 import com.example.djeventhub.models.Message
 import com.example.djeventhub.ui.theme.*
 import java.text.SimpleDateFormat
@@ -48,16 +47,24 @@ fun ChatScreen(
 
     Scaffold(
         topBar = {
-            TopAppBar(
-                title = { Text(otherUserName) },
+            CenterAlignedTopAppBar(
+                title = {
+                    Text(
+                        otherUserName,
+                        style = MaterialTheme.typography.titleLarge,
+                        fontWeight = FontWeight.Bold,
+                        color = TextPrimary
+                    )
+                },
                 navigationIcon = {
                     IconButton(onClick = onNavigateBack) {
                         Icon(Icons.AutoMirrored.Filled.ArrowBack, contentDescription = "Volver")
                     }
                 },
-                colors = TopAppBarDefaults.topAppBarColors(
+                colors = TopAppBarDefaults.centerAlignedTopAppBarColors(
                     containerColor = DeepBlack
-                )
+                ),
+                modifier = Modifier.height(56.dp)
             )
         },
         containerColor = DeepBlack,

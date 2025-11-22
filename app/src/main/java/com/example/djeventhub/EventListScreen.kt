@@ -3,12 +3,10 @@ package com.example.djeventhub
 import android.content.Intent
 import android.net.Uri
 import androidx.compose.animation.core.*
+import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
-import androidx.compose.foundation.layout.WindowInsets
-import androidx.compose.foundation.layout.statusBars
-import androidx.compose.foundation.layout.windowInsetsPadding
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.itemsIndexed
 import androidx.compose.foundation.shape.RoundedCornerShape
@@ -23,14 +21,14 @@ import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.scale
-import androidx.compose.ui.graphics.graphicsLayer
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
-import androidx.compose.foundation.layout.size
-import androidx.compose.foundation.layout.height
+import com.example.djeventhub.models.Event
 import com.example.djeventhub.ui.animations.animateItemPlacement
 import com.example.djeventhub.ui.animations.bounceClick
+import com.example.djeventhub.ui.events.EventListViewModel
+import com.example.djeventhub.ui.events.EventWithDistance
 import com.example.djeventhub.ui.theme.*
 import java.text.SimpleDateFormat
 import java.util.*
@@ -56,16 +54,15 @@ fun EventListScreen(
                         "DJ Event Hub",
                         style = MaterialTheme.typography.titleLarge,
                         fontWeight = FontWeight.Bold,
-                        color = com.example.djeventhub.ui.theme.TextPrimary
+                        color = TextPrimary
                     )
                 },
                 colors = TopAppBarDefaults.centerAlignedTopAppBarColors(
-                    containerColor = com.example.djeventhub.ui.theme.DeepBlack
-                ),
-                modifier = Modifier.height(56.dp)
+                    containerColor = DeepBlack
+                )
             )
         },
-        containerColor = com.example.djeventhub.ui.theme.DeepBlack
+        containerColor = DeepBlack
     ) { padding ->
         val swipeState = rememberSwipeRefreshState(isRefreshing)
 
@@ -149,7 +146,7 @@ fun EventListItem(
             .clickable { onEventClick(event.id) },
         shape = RoundedCornerShape(16.dp),
         colors = CardDefaults.cardColors(
-            containerColor = com.example.djeventhub.ui.theme.DarkSurface
+            containerColor = DarkSurface
         ),
         elevation = CardDefaults.cardElevation(
             defaultElevation = 0.dp
@@ -165,8 +162,8 @@ fun EventListItem(
                         .background(
                             brush = androidx.compose.ui.graphics.Brush.horizontalGradient(
                                 colors = listOf(
-                                    com.example.djeventhub.ui.theme.NeonPink,
-                                    com.example.djeventhub.ui.theme.NeonPurple
+                                    NeonPink,
+                                    NeonPurple
                                 )
                             ),
                             shape = RoundedCornerShape(16.dp)
@@ -178,7 +175,7 @@ fun EventListItem(
                 modifier = Modifier
                     .fillMaxWidth()
                     .background(
-                        com.example.djeventhub.ui.theme.DarkSurface,
+                        DarkSurface,
                         shape = RoundedCornerShape(16.dp)
                     )
                     .padding(16.dp)
@@ -191,7 +188,7 @@ fun EventListItem(
                     Column(
                         modifier = Modifier
                             .background(
-                                com.example.djeventhub.ui.theme.DarkSurfaceVariant,
+                                DarkSurfaceVariant,
                                 shape = RoundedCornerShape(12.dp)
                             )
                             .padding(horizontal = 12.dp, vertical = 8.dp),
@@ -201,12 +198,12 @@ fun EventListItem(
                             text = SimpleDateFormat("dd", Locale.getDefault()).format(date),
                             style = MaterialTheme.typography.headlineSmall,
                             fontWeight = FontWeight.Bold,
-                            color = com.example.djeventhub.ui.theme.NeonPink
+                            color = NeonPink
                         )
                         Text(
                             text = SimpleDateFormat("MMM", Locale.getDefault()).format(date).uppercase(),
                             style = MaterialTheme.typography.bodySmall,
-                            color = com.example.djeventhub.ui.theme.TextSecondary
+                            color = TextSecondary
                         )
                     }
 
@@ -218,13 +215,13 @@ fun EventListItem(
                             text = event.name,
                             style = MaterialTheme.typography.titleMedium,
                             fontWeight = FontWeight.Bold,
-                            color = com.example.djeventhub.ui.theme.TextPrimary
+                            color = TextPrimary
                         )
                         Spacer(modifier = Modifier.height(4.dp))
                         Text(
                             text = event.description,
                             style = MaterialTheme.typography.bodyMedium,
-                            color = com.example.djeventhub.ui.theme.TextSecondary,
+                            color = TextSecondary,
                             maxLines = 2
                         )
                     }
@@ -234,7 +231,7 @@ fun EventListItem(
                         Box(
                             modifier = Modifier
                                 .background(
-                                    com.example.djeventhub.ui.theme.NeonPink.copy(alpha = 0.2f),
+                                    NeonPink.copy(alpha = 0.2f),
                                     shape = RoundedCornerShape(8.dp)
                                 )
                                 .padding(horizontal = 8.dp, vertical = 4.dp)
@@ -242,7 +239,7 @@ fun EventListItem(
                             Text(
                                 text = eventWithDistance.distanceText,
                                 style = MaterialTheme.typography.labelSmall,
-                                color = com.example.djeventhub.ui.theme.NeonPink,
+                                color = NeonPink,
                                 fontWeight = FontWeight.Bold
                             )
                         }
@@ -262,14 +259,14 @@ fun EventListItem(
                         Icon(
                             imageVector = Icons.Default.DateRange,
                             contentDescription = null,
-                            tint = com.example.djeventhub.ui.theme.ElectricBlue,
+                            tint = ElectricBlue,
                             modifier = Modifier.size(16.dp)
                         )
                         Spacer(modifier = Modifier.width(4.dp))
                         Text(
                             text = timeFormat.format(date),
                             style = MaterialTheme.typography.bodySmall,
-                            color = com.example.djeventhub.ui.theme.TextSecondary
+                            color = TextSecondary
                         )
                     }
 
@@ -280,11 +277,11 @@ fun EventListItem(
                         OutlinedButton(
                             onClick = { },
                             colors = ButtonDefaults.outlinedButtonColors(
-                                contentColor = com.example.djeventhub.ui.theme.NeonPink
+                                contentColor = NeonPink
                             ),
-                            border = androidx.compose.foundation.BorderStroke(
+                            border = BorderStroke(
                                 1.dp,
-                                com.example.djeventhub.ui.theme.NeonPink
+                                NeonPink
                             ),
                             shape = RoundedCornerShape(8.dp),
                             contentPadding = PaddingValues(horizontal = 12.dp, vertical = 6.dp),

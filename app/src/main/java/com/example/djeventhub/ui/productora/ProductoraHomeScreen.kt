@@ -8,7 +8,7 @@ import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
-import com.example.djeventhub.EventListViewModel
+import com.example.djeventhub.ui.events.EventListViewModel
 
 @Composable
 fun ProductoraHomeScreen(

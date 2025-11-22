@@ -1,16 +1,20 @@
-package com.example.djeventhub
+package com.example.djeventhub.ui.events
 
-import android.location.Location
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
+import com.example.djeventhub.data.EventRepository
 import com.example.djeventhub.location.LocationManager
+import com.example.djeventhub.models.Event
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.launch
 import javax.inject.Inject
 
-// ViewModel that exposes a list of events sorted by proximity
+/**
+ * ViewModel that exposes a list of events sorted by proximity.
+ * Uses Hilt for dependency injection.
+ */
 @HiltViewModel
 class EventListViewModel @Inject constructor(
     private val repository: EventRepository,
@@ -117,7 +121,9 @@ class EventListViewModel @Inject constructor(
     }
 }
 
-// Data class to hold an event with its calculated distance
+/**
+ * Data class to hold an event with its calculated distance
+ */
 data class EventWithDistance(
     val event: Event,
     val distanceInMeters: Float?

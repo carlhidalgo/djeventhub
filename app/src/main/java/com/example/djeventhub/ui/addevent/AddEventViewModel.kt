@@ -3,9 +3,9 @@ package com.example.djeventhub.ui.addevent
 import android.app.Application
 import androidx.lifecycle.AndroidViewModel
 import androidx.lifecycle.viewModelScope
-import com.example.djeventhub.Event
-import com.example.djeventhub.EventRepository
+import com.example.djeventhub.data.EventRepository
 import com.example.djeventhub.data.StorageRepository
+import com.example.djeventhub.models.Event
 import com.example.djeventhub.location.LocationManager
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.flow.MutableStateFlow

@@ -1,7 +1,7 @@
 package com.example.djeventhub.ui.dj
 
 import androidx.compose.runtime.Composable
-import com.example.djeventhub.EventListViewModel
+import com.example.djeventhub.ui.events.EventListViewModel
 
 @Composable
 fun DJHomeScreen(

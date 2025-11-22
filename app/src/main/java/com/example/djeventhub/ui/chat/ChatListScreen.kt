@@ -14,7 +14,6 @@ import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
-import androidx.compose.material.icons.filled.Refresh
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
@@ -27,6 +26,9 @@ import androidx.hilt.navigation.compose.hiltViewModel
 import coil.compose.AsyncImage
 import com.example.djeventhub.models.Chat
 import com.example.djeventhub.ui.theme.*
+import com.google.accompanist.swiperefresh.SwipeRefresh
+import com.google.accompanist.swiperefresh.SwipeRefreshIndicator
+import com.google.accompanist.swiperefresh.rememberSwipeRefreshState
 import java.text.SimpleDateFormat
 import java.util.*
 
@@ -42,8 +44,15 @@ fun ChatListScreen(
 
     Scaffold(
         topBar = {
-            TopAppBar(
-                title = { Text("Mensajes") },
+            CenterAlignedTopAppBar(
+                title = {
+                    Text(
+                        "Mensajes",
+                        style = MaterialTheme.typography.titleLarge,
+                        fontWeight = FontWeight.Bold,
+                        color = TextPrimary
+                    )
+                },
                 navigationIcon = {
                     if (onNavigateBack != null) {
                         IconButton(onClick = onNavigateBack) {
@@ -52,44 +61,38 @@ fun ChatListScreen(
                     }
                 },
                 actions = {
-                    IconButton(onClick = { viewModel.refresh() }) {
-                        Icon(
-                            Icons.Default.Refresh,
-                            contentDescription = "Actualizar",
-                            tint = NeonPink
-                        )
-                    }
                     if (uiState is ChatListUiState.Success) {
                         val total = (uiState as ChatListUiState.Success).totalUnreadCount
                         if (total > 0) {
                             AssistChip(
                                 onClick = {},
-                                label = { Text("$total sin leer") },
+                                label = { Text("$total") },
                                 colors = AssistChipDefaults.assistChipColors(
-                                    containerColor = NeonPink.copy(alpha = 0.2f)
+                                    containerColor = NeonPink.copy(alpha = 0.2f),
+                                    labelColor = NeonPink
                                 )
                             )
                         }
                     }
                 },
-                colors = TopAppBarDefaults.topAppBarColors(
+                colors = TopAppBarDefaults.centerAlignedTopAppBarColors(
                     containerColor = DeepBlack
-                )
+                ),
+                modifier = Modifier.height(56.dp)
             )
         },
         containerColor = DeepBlack
     ) { padding ->
         when (val state = uiState) {
             is ChatListUiState.Loading -> {
-                // Shimmer placeholders
-                LazyColumn(
+                // This state is no longer used, but keep for compatibility
+                Box(
                     modifier = Modifier
                         .fillMaxSize()
-                        .padding(padding)
+                        .padding(padding),
+                    contentAlignment = Alignment.Center
                 ) {
-                    items(6) {
-                        ShimmerChatItem()
-                    }
+                    CircularProgressIndicator(color = NeonPink)
                 }
             }
             is ChatListUiState.Error -> {
@@ -125,6 +128,9 @@ fun ChatListScreen(
                     chat.getOtherParticipantName(currentUserId).contains(searchQuery, ignoreCase = true)
                 }
                 android.util.Log.d("ChatListScreen", "Filtered: ${filtered.size} chats")
+
+                val swipeState = rememberSwipeRefreshState(state.isRefreshing)
+
                 Column(
                     modifier = Modifier
                         .fillMaxSize()
@@ -146,33 +152,42 @@ fun ChatListScreen(
                         )
                     )
 
-                    // Refresh indicator (linear)
-                    if (state.isRefreshing) {
-                        LinearProgressIndicator(
-                            modifier = Modifier
-                                .fillMaxWidth()
-                                .padding(horizontal = 16.dp),
-                            color = NeonPink
-                        )
-                    }
-
-                    if (filtered.isEmpty()) {
-                        Box(
-                            modifier = Modifier.fillMaxSize(),
-                            contentAlignment = Alignment.Center
-                        ) {
-                            Text(
-                                text = if (searchQuery.isBlank()) "No tienes conversaciones" else "Sin resultados para '$searchQuery'",
-                                color = TextSecondary,
-                                style = MaterialTheme.typography.bodyLarge
+                    SwipeRefresh(
+                        state = swipeState,
+                        onRefresh = { viewModel.refresh() },
+                        indicator = { s, trigger ->
+                            SwipeRefreshIndicator(
+                                state = s,
+                                refreshTriggerDistance = trigger,
+                                contentColor = NeonPink
                             )
                         }
-                    } else {
-                        LazyColumn(
-                            modifier = Modifier.fillMaxSize()
-                        ) {
-                            items(filtered) { chat ->
-                                ChatListItem(chat = chat, onClick = { onChatClick(chat.chatId) })
+                    ) {
+                        // Show shimmer only on first load when list is empty and refreshing
+                        if (state.chats.isEmpty() && state.isRefreshing) {
+                            LazyColumn(modifier = Modifier.fillMaxSize()) {
+                                items(6) {
+                                    ShimmerChatItem()
+                                }
+                            }
+                        } else if (filtered.isEmpty()) {
+                            Box(
+                                modifier = Modifier.fillMaxSize(),
+                                contentAlignment = Alignment.Center
+                            ) {
+                                Text(
+                                    text = if (searchQuery.isBlank()) "No tienes conversaciones" else "Sin resultados para '$searchQuery'",
+                                    color = TextSecondary,
+                                    style = MaterialTheme.typography.bodyLarge
+                                )
+                            }
+                        } else {
+                            LazyColumn(
+                                modifier = Modifier.fillMaxSize()
+                            ) {
+                                items(filtered, key = { it.chatId }) { chat ->
+                                    ChatListItem(chat = chat, onClick = { onChatClick(chat.chatId) })
+                                }
                             }
                         }
                     }
