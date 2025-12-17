@@ -32,3 +32,5 @@ out/
 # Google services - do NOT commit your credentials
 # Prevent accidentally adding the Firebase configuration file
 app/google-services.json
+
+.claude/
