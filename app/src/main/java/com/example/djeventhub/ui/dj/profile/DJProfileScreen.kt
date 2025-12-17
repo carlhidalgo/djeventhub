@@ -47,43 +47,26 @@ fun DJProfileScreen(
         uri?.let { viewModel.uploadProfilePhoto(it) }
     }
 
+    val themeController = LocalThemeController.current
+
     Scaffold(
         topBar = {
             if (showTopBar) {
-                CenterAlignedTopAppBar(
-                    title = {
-                        Text(
-                            "Mi Perfil DJ",
-                            style = MaterialTheme.typography.titleLarge,
-                            fontWeight = FontWeight.Bold,
-                            color = TextPrimary
-                        )
-                    },
-                    navigationIcon = {
-                        IconButton(onClick = onNavigateBack) {
-                            Icon(
-                                Icons.AutoMirrored.Filled.ArrowBack,
-                                contentDescription = "Volver",
-                                modifier = Modifier.size(20.dp)
-                            )
-                        }
-                    },
+                SmallTopAppBar(
+                    title = { Text("Mi Perfil DJ", style = MaterialTheme.typography.bodyMedium, fontWeight = FontWeight.Bold, color = TextPrimary) },
+                    navigationIcon = { IconButton(onClick = onNavigateBack) { Icon(Icons.AutoMirrored.Filled.ArrowBack, contentDescription = "Volver") } },
                     actions = {
+                        IconButton(onClick = { themeController.toggle() }) {
+                            Icon(imageVector = if (themeController.isDark) Icons.Default.Star else Icons.Default.Edit, contentDescription = "Alternar tema")
+                        }
                         if (uiState is DJProfileUiState.Success) {
                             IconButton(onClick = onEdit) {
-                                Icon(
-                                    Icons.Default.Edit,
-                                    contentDescription = "Editar",
-                                    tint = NeonPink,
-                                    modifier = Modifier.size(20.dp)
-                                )
+                                Icon(Icons.Default.Edit, contentDescription = "Editar", tint = NeonPink)
                             }
                         }
                     },
-                    colors = TopAppBarDefaults.centerAlignedTopAppBarColors(
-                        containerColor = DeepBlack
-                    ),
-                    modifier = Modifier.height(56.dp)
+                    colors = TopAppBarDefaults.smallTopAppBarColors(containerColor = MaterialTheme.colorScheme.surface),
+                    modifier = Modifier.fillMaxWidth().windowInsetsPadding(WindowInsets.statusBars)
                 )
             }
         },
@@ -121,7 +104,6 @@ fun DJProfileScreen(
                     user = state.user,
                     onPickImage = { launcher.launch("image/*") },
                     onLogout = onLogout,
-                    viewModel = viewModel,
                     modifier = Modifier.padding(padding)
                 )
             }
@@ -135,7 +117,7 @@ fun DJProfileContent(
     user: User,
     onPickImage: () -> Unit,
     onLogout: () -> Unit,
-    viewModel: DJProfileViewModel,
+    viewModel: DJProfileViewModel = hiltViewModel(),
     modifier: Modifier = Modifier
 ) {
     Column(

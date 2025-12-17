@@ -14,6 +14,7 @@ enum class EventsTab {
     LIST, MAP
 }
 
+@OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun EventsMainScreen(
     viewModel: EventListViewModel,
@@ -33,53 +34,63 @@ fun EventsMainScreen(
         )
     }
 
-    // Si showOnlyList o showOnlyMap están activos, no mostramos el bottom bar interno
-    val showBottomBar = !showOnlyList && !showOnlyMap
-
-    Scaffold(
-        bottomBar = {
-            if (showBottomBar) {
-            NavigationBar {
-                NavigationBarItem(
-                    icon = {
-                        Icon(
-                            imageVector = Icons.Default.List,
-                            contentDescription = "Lista"
-                        )
-                    },
-                    label = { Text("Lista") },
-                    selected = selectedTab == EventsTab.LIST,
-                    onClick = { selectedTab = EventsTab.LIST }
-                )
-                NavigationBarItem(
-                    icon = {
-                        Icon(
-                            imageVector = Icons.Outlined.Place,
-                            contentDescription = "Mapa"
-                        )
-                    },
-                    label = { Text("Mapa") },
-                    selected = selectedTab == EventsTab.MAP,
-                    onClick = { selectedTab = EventsTab.MAP }
-                )
-            }
-            }
-        }
-    ) { paddingValues ->
-        Box(modifier = Modifier.padding(paddingValues)) {
-            when (selectedTab) {
-                EventsTab.LIST -> {
-                    EventListScreen(
-                        viewModel = viewModel,
-                        onAddEvent = onAddEvent,
-                        onProfile = onProfile,
-                        onEventClick = onEventClick
+    // Si showOnlyList o showOnlyMap, no usar Scaffold (evitar scaffolds anidados)
+    if (showOnlyList) {
+        EventListScreen(
+            viewModel = viewModel,
+            onAddEvent = onAddEvent,
+            onProfile = onProfile,
+            onEventClick = onEventClick
+        )
+    } else if (showOnlyMap) {
+        MapScreen(
+            viewModel = viewModel
+        )
+    } else {
+        Scaffold(
+            bottomBar = {
+                NavigationBar {
+                    NavigationBarItem(
+                        icon = {
+                            Icon(
+                                imageVector = Icons.Default.List,
+                                contentDescription = "Lista"
+                            )
+                        },
+                        label = { Text("Lista") },
+                        selected = selectedTab == EventsTab.LIST,
+                        onClick = { selectedTab = EventsTab.LIST }
+                    )
+                    NavigationBarItem(
+                        icon = {
+                            Icon(
+                                imageVector = Icons.Outlined.Place,
+                                contentDescription = "Mapa"
+                            )
+                        },
+                        label = { Text("Mapa") },
+                        selected = selectedTab == EventsTab.MAP,
+                        onClick = { selectedTab = EventsTab.MAP }
                     )
                 }
-                EventsTab.MAP -> {
-                    MapScreen(
-                        viewModel = viewModel
-                    )
+            },
+            containerColor = com.example.djeventhub.ui.theme.DeepBlack
+        ) { paddingValues ->
+            Box(modifier = Modifier.padding(paddingValues)) {
+                when (selectedTab) {
+                    EventsTab.LIST -> {
+                        EventListScreen(
+                            viewModel = viewModel,
+                            onAddEvent = onAddEvent,
+                            onProfile = onProfile,
+                            onEventClick = onEventClick
+                        )
+                    }
+                    EventsTab.MAP -> {
+                        MapScreen(
+                            viewModel = viewModel
+                        )
+                    }
                 }
             }
         }

@@ -47,11 +47,11 @@ fun ChatScreen(
 
     Scaffold(
         topBar = {
-            CenterAlignedTopAppBar(
+            SmallTopAppBar(
                 title = {
                     Text(
                         otherUserName,
-                        style = MaterialTheme.typography.titleLarge,
+                        style = MaterialTheme.typography.bodyMedium,
                         fontWeight = FontWeight.Bold,
                         color = TextPrimary
                     )
@@ -61,10 +61,8 @@ fun ChatScreen(
                         Icon(Icons.AutoMirrored.Filled.ArrowBack, contentDescription = "Volver")
                     }
                 },
-                colors = TopAppBarDefaults.centerAlignedTopAppBarColors(
-                    containerColor = DeepBlack
-                ),
-                modifier = Modifier.height(56.dp)
+                colors = TopAppBarDefaults.smallTopAppBarColors(containerColor = MaterialTheme.colorScheme.surface),
+                modifier = Modifier.fillMaxWidth().windowInsetsPadding(WindowInsets.statusBars)
             )
         },
         containerColor = DeepBlack,

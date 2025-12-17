@@ -3,6 +3,12 @@ package com.example.djeventhub
 import android.content.Context
 import android.net.Uri
 import android.os.Environment
+import androidx.camera.core.CameraSelector
+import androidx.camera.core.ImageCapture
+import androidx.camera.core.ImageCaptureException
+import androidx.camera.core.Preview
+import androidx.camera.lifecycle.ProcessCameraProvider
+import androidx.camera.view.PreviewView
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.material3.Button
@@ -15,29 +21,79 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalContext
 import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.result.contract.ActivityResultContracts
+import androidx.core.content.ContextCompat
+import androidx.lifecycle.LifecycleOwner
 import java.io.File
 import java.text.SimpleDateFormat
 import java.util.Date
 import java.util.Locale
 import java.util.concurrent.Executors
 
-// Note: This is a simplified camera handler that does NOT use CameraX to avoid
-// static analysis errors in environments where CameraX is not indexed.
-// TODO: Replace with CameraX implementation when project is built and CameraX classes are resolvable.
 object CameraHandler {
 
     private val cameraExecutor = Executors.newSingleThreadExecutor()
 
-    // Create a file and return its Uri via callback. This is a stub for an actual capture.
-    fun takePicture(context: Context, onImageSaved: (Uri) -> Unit, onError: (Exception) -> Unit = {}) {
-        try {
-            val photoFile = createFile(context)
-            val savedUri = Uri.fromFile(photoFile)
-            // In a real implementation we would capture and write image data here.
-            onImageSaved(savedUri)
-        } catch (e: Exception) {
-            onError(e)
-        }
+    fun takePicture(
+        context: Context,
+        imageCapture: ImageCapture,
+        onImageSaved: (Uri) -> Unit,
+        onError: (Exception) -> Unit = {}
+    ) {
+        val photoFile = createFile(context)
+        val outputOptions = ImageCapture.OutputFileOptions.Builder(photoFile).build()
+
+        imageCapture.takePicture(
+            outputOptions,
+            cameraExecutor,
+            object : ImageCapture.OnImageSavedCallback {
+                override fun onImageSaved(output: ImageCapture.OutputFileResults) {
+                    val savedUri = Uri.fromFile(photoFile)
+                    onImageSaved(savedUri)
+                }
+
+                override fun onError(exception: ImageCaptureException) {
+                    onError(exception)
+                }
+            }
+        )
+    }
+
+    fun bindCameraUseCases(
+        context: Context,
+        lifecycleOwner: LifecycleOwner,
+        previewView: PreviewView,
+        onImageCaptureReady: (ImageCapture) -> Unit
+    ) {
+        val cameraProviderFuture = ProcessCameraProvider.getInstance(context)
+
+        cameraProviderFuture.addListener({
+            val cameraProvider = cameraProviderFuture.get()
+
+            val preview = Preview.Builder()
+                .build()
+                .also {
+                    it.setSurfaceProvider(previewView.surfaceProvider)
+                }
+
+            val imageCapture = ImageCapture.Builder()
+                .setCaptureMode(ImageCapture.CAPTURE_MODE_MINIMIZE_LATENCY)
+                .build()
+
+            val cameraSelector = CameraSelector.DEFAULT_BACK_CAMERA
+
+            try {
+                cameraProvider.unbindAll()
+                cameraProvider.bindToLifecycle(
+                    lifecycleOwner,
+                    cameraSelector,
+                    preview,
+                    imageCapture
+                )
+                onImageCaptureReady(imageCapture)
+            } catch (e: Exception) {
+                // Handle error
+            }
+        }, ContextCompat.getMainExecutor(context))
     }
 
     private fun createFile(context: Context): File {
@@ -49,32 +105,61 @@ object CameraHandler {
         }
         return File(storageDir, name)
     }
+
+    fun shutdown() {
+        cameraExecutor.shutdown()
+    }
 }
 
-// Simple composable to request camera permission and show a button to take a picture
+// Composable to request camera permission and capture images with CameraX
 @Composable
-fun CameraPermissionHandler(onImageCaptured: (Uri) -> Unit) {
+fun CameraPermissionHandler(
+    onImageCaptured: (Uri) -> Unit,
+    lifecycleOwner: LifecycleOwner
+) {
     val context = LocalContext.current
     val hasPermission = remember { mutableStateOf(false) }
+    val imageCapture = remember { mutableStateOf<ImageCapture?>(null) }
+    val previewView = remember { PreviewView(context) }
 
     val launcher = rememberLauncherForActivityResult(ActivityResultContracts.RequestPermission()) { granted ->
         hasPermission.value = granted
+        if (granted) {
+            CameraHandler.bindCameraUseCases(
+                context = context,
+                lifecycleOwner = lifecycleOwner,
+                previewView = previewView,
+                onImageCaptureReady = { capture ->
+                    imageCapture.value = capture
+                }
+            )
+        }
     }
 
     LaunchedEffect(Unit) {
-        // request permission when composable enters composition
         launcher.launch(android.Manifest.permission.CAMERA)
     }
 
     Box(modifier = Modifier.fillMaxSize()) {
         if (hasPermission.value) {
+            androidx.compose.ui.viewinterop.AndroidView(
+                factory = { previewView },
+                modifier = Modifier.fillMaxSize()
+            )
             Button(onClick = {
-                CameraHandler.takePicture(context, onImageCaptured) { /* ignore errors for now */ }
+                imageCapture.value?.let { capture ->
+                    CameraHandler.takePicture(
+                        context = context,
+                        imageCapture = capture,
+                        onImageSaved = onImageCaptured,
+                        onError = { /* Handle error */ }
+                    )
+                }
             }) {
-                Text(text = "Take Picture")
+                Text(text = "Capturar Foto")
             }
         } else {
-            Text(text = "Camera permission required")
+            Text(text = "Se requiere permiso de cámara")
         }
     }
 }

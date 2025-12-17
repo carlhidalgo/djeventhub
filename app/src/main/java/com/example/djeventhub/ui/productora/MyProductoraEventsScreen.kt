@@ -34,23 +34,14 @@ fun MyProductoraEventsScreen(
 
     Scaffold(
         topBar = {
-            CenterAlignedTopAppBar(
-                title = {
-                    Text(
-                        "Mis Eventos Creados",
-                        style = MaterialTheme.typography.titleLarge,
-                        fontWeight = FontWeight.Bold,
-                        color = TextPrimary
-                    )
-                },
-                colors = TopAppBarDefaults.centerAlignedTopAppBarColors(
-                    containerColor = DeepBlack
-                ),
-                modifier = Modifier.height(56.dp)
+            TopAppBar(
+                title = { Text("Mis Eventos Creados", style = MaterialTheme.typography.bodyMedium, fontWeight = FontWeight.Bold, color = TextPrimary) },
+                colors = TopAppBarDefaults.topAppBarColors(containerColor = MaterialTheme.colorScheme.surface),
+                modifier = Modifier.fillMaxWidth().windowInsetsPadding(WindowInsets.statusBars)
             )
-        },
-        containerColor = DeepBlack
-    ) { padding ->
+         },
+         containerColor = DeepBlack
+     ) { padding ->
         if (myCreatedEvents.isEmpty()) {
             Box(
                 modifier = Modifier

@@ -33,7 +33,7 @@ fun ApplicationsListScreen(
     onViewDJProfile: (String) -> Unit,
     onOpenChat: (String, String) -> Unit,
     onAcceptApplicant: (String) -> Unit,
-    viewModel: ApplicationsViewModel = hiltViewModel()
+    viewModel: ApplicationsViewModel = hiltViewModel<ApplicationsViewModel>()
 ) {
     val applicants by viewModel.applicants.collectAsState()
     val isLoading by viewModel.isLoading.collectAsState()
@@ -55,36 +55,17 @@ fun ApplicationsListScreen(
 
     Scaffold(
         topBar = {
-            TopAppBar(
-                title = { 
-                    Column {
-                        Text(
-                            "Postulantes",
-                            style = MaterialTheme.typography.titleMedium
-                        )
-                        Text(
-                            eventName,
-                            style = MaterialTheme.typography.bodySmall,
-                            color = TextSecondary
-                        )
-                    }
-                },
+            com.example.djeventhub.ui.components.CompactTopBar(
+                title = "Postulantes",
                 navigationIcon = {
                     IconButton(onClick = onNavigateBack) {
-                        Icon(
-                            Icons.AutoMirrored.Filled.ArrowBack,
-                            contentDescription = "Volver"
-                        )
+                        Icon(Icons.AutoMirrored.Filled.ArrowBack, contentDescription = "Volver")
                     }
-                },
-                colors = TopAppBarDefaults.topAppBarColors(
-                    containerColor = DeepBlack
-                ),
-                windowInsets = WindowInsets(0.dp)
+                }
             )
-        },
-        containerColor = DeepBlack
-    ) { padding ->
+         },
+         containerColor = DeepBlack
+     ) { padding ->
         Box(
             modifier = Modifier
                 .fillMaxSize()

@@ -14,6 +14,7 @@ import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.DateRange
 import androidx.compose.material.icons.filled.LocationOn
 import androidx.compose.material3.*
+import androidx.compose.material3.CircularProgressIndicator
 import com.google.accompanist.swiperefresh.SwipeRefresh
 import com.google.accompanist.swiperefresh.SwipeRefreshIndicator
 import com.google.accompanist.swiperefresh.rememberSwipeRefreshState
@@ -34,7 +35,6 @@ import java.text.SimpleDateFormat
 import java.util.*
 
 // Composable screen to show a list of events sorted by proximity
-@OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun EventListScreen(
     viewModel: EventListViewModel,
@@ -45,71 +45,50 @@ fun EventListScreen(
     val events by viewModel.events.collectAsState()
     val isRefreshing by viewModel.isRefreshing.collectAsState()
     val context = LocalContext.current
+    val swipeState = rememberSwipeRefreshState(isRefreshing)
 
-    Scaffold(
-        topBar = {
-            CenterAlignedTopAppBar(
-                title = {
-                    Text(
-                        "DJ Event Hub",
-                        style = MaterialTheme.typography.titleLarge,
-                        fontWeight = FontWeight.Bold,
-                        color = TextPrimary
-                    )
-                },
-                colors = TopAppBarDefaults.centerAlignedTopAppBarColors(
-                    containerColor = DeepBlack
-                )
-            )
-        },
-        containerColor = DeepBlack
-    ) { padding ->
-        val swipeState = rememberSwipeRefreshState(isRefreshing)
-
-        Box(
-            modifier = Modifier
-                .fillMaxSize()
-                .padding(padding)
+    Box(
+        modifier = Modifier.fillMaxSize()
+    ) {
+        SwipeRefresh(
+            state = swipeState,
+            onRefresh = { viewModel.refreshLocation() },
+            indicator = { s, trigger ->
+                SwipeRefreshIndicator(state = s, refreshTriggerDistance = trigger)
+            }
         ) {
-            SwipeRefresh(
-                state = swipeState,
-                onRefresh = { viewModel.refreshLocation() },
-                indicator = { s, trigger ->
-                    SwipeRefreshIndicator(state = s, refreshTriggerDistance = trigger)
-                }
+            LazyColumn(
+                modifier = Modifier
+                    .fillMaxSize()
+                    .padding(horizontal = 16.dp)
+                    .padding(top = 8.dp)
             ) {
-                LazyColumn(
-                    modifier = Modifier
-                        .fillMaxSize()
-                        .padding(horizontal = 8.dp)
-                ) {
-                    itemsIndexed(
-                        items = events,
-                        key = { _, item -> item.event.id }
-                    ) { index, eventWithDistance ->
-                        EventListItem(
-                            eventWithDistance = eventWithDistance,
-                            onMapClick = { event ->
-                                openInMaps(context, event)
-                            },
-                            onEventClick = { eventId ->
-                                onEventClick(eventId)
-                            },
-                            modifier = Modifier.animateItemPlacement(index)
-                        )
-                    }
+                itemsIndexed(
+                    items = events,
+                    key = { _, item -> item.event.id }
+                ) { index, eventWithDistance ->
+                    EventListItem(
+                        eventWithDistance = eventWithDistance,
+                        onMapClick = { event ->
+                            openInMaps(context, event)
+                        },
+                        onEventClick = { eventId ->
+                            onEventClick(eventId)
+                        },
+                        modifier = Modifier.animateItemPlacement(index)
+                    )
                 }
             }
+        }
 
-            // Optional: keep a manual indicator (Accompanist shows one inside SwipeRefresh)
-            if (isRefreshing) {
-                CircularProgressIndicator(
-                    modifier = Modifier
-                        .align(Alignment.TopCenter)
-                        .padding(top = 16.dp),
-                    color = MaterialTheme.colorScheme.primary
-                )
-            }
+        // Optional: keep a manual indicator (Accompanist shows one inside SwipeRefresh)
+        if (isRefreshing) {
+            CircularProgressIndicator(
+                modifier = Modifier
+                    .align(Alignment.TopCenter)
+                    .padding(top = 16.dp),
+                color = MaterialTheme.colorScheme.primary
+            )
         }
     }
 }

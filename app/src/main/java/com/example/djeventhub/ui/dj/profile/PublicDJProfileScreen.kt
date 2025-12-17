@@ -28,7 +28,7 @@ import com.example.djeventhub.ui.theme.*
 fun PublicDJProfileScreen(
     djId: String,
     onNavigateBack: () -> Unit,
-    onContactDJ: () -> Unit = {},
+    onContactDJ: (djId: String, djName: String, djImage: String?) -> Unit = { _, _, _ -> },
     viewModel: PublicDJProfileViewModel = hiltViewModel()
 ) {
     val uiState by viewModel.uiState.collectAsState()
@@ -39,31 +39,26 @@ fun PublicDJProfileScreen(
 
     Scaffold(
         topBar = {
-            CenterAlignedTopAppBar(
+            SmallTopAppBar(
                 title = {
                     Text(
                         "Perfil del DJ",
-                        style = MaterialTheme.typography.titleLarge,
+                        style = MaterialTheme.typography.bodyMedium,
                         fontWeight = FontWeight.Bold,
                         color = TextPrimary
                     )
                 },
                 navigationIcon = {
                     IconButton(onClick = onNavigateBack) {
-                        Icon(
-                            Icons.AutoMirrored.Filled.ArrowBack,
-                            contentDescription = "Volver"
-                        )
+                        Icon(Icons.AutoMirrored.Filled.ArrowBack, contentDescription = "Volver")
                     }
                 },
-                colors = TopAppBarDefaults.centerAlignedTopAppBarColors(
-                    containerColor = DeepBlack
-                ),
-                modifier = Modifier.height(56.dp)
+                colors = TopAppBarDefaults.smallTopAppBarColors(containerColor = MaterialTheme.colorScheme.surface),
+                modifier = Modifier.fillMaxWidth().windowInsetsPadding(WindowInsets.statusBars)
             )
-        },
-        containerColor = DeepBlack
-    ) { padding ->
+         },
+         containerColor = DeepBlack
+     ) { padding ->
         when (val state = uiState) {
             is PublicDJProfileUiState.Loading -> {
                 Box(
@@ -94,7 +89,9 @@ fun PublicDJProfileScreen(
             is PublicDJProfileUiState.Success -> {
                 PublicDJProfileContent(
                     user = state.user,
-                    onContactDJ = onContactDJ,
+                    onContactDJ = {
+                        onContactDJ(state.user.uid, state.user.displayName, state.user.profileImageUrl)
+                    },
                     modifier = Modifier.padding(padding)
                 )
             }

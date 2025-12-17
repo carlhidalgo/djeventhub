@@ -149,28 +149,22 @@ fun AddEventScreen(
 
     Scaffold(
         topBar = {
-            CenterAlignedTopAppBar(
+            SmallTopAppBar(
                 title = {
                     Text(
                         "Crear Evento",
-                        style = MaterialTheme.typography.titleLarge,
+                        style = MaterialTheme.typography.bodyMedium,
                         fontWeight = FontWeight.Bold,
                         color = com.example.djeventhub.ui.theme.TextPrimary
                     )
                 },
                 navigationIcon = {
                     IconButton(onClick = onNavigateBack) {
-                        Icon(
-                            Icons.AutoMirrored.Filled.ArrowBack,
-                            contentDescription = "Volver",
-                            modifier = Modifier.size(20.dp)
-                        )
+                        Icon(Icons.AutoMirrored.Filled.ArrowBack, contentDescription = "Volver")
                     }
                 },
-                colors = TopAppBarDefaults.centerAlignedTopAppBarColors(
-                    containerColor = com.example.djeventhub.ui.theme.DeepBlack
-                ),
-                modifier = Modifier.height(56.dp)
+                colors = TopAppBarDefaults.smallTopAppBarColors(containerColor = MaterialTheme.colorScheme.surface),
+                modifier = Modifier.fillMaxWidth().windowInsetsPadding(WindowInsets.statusBars)
             )
         }
     ) { padding ->

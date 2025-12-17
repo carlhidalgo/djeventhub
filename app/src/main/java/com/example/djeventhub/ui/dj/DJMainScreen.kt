@@ -8,7 +8,9 @@ import androidx.compose.material.icons.filled.*
 import androidx.compose.material.icons.outlined.*
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
+import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.viewModelScope
 import com.example.djeventhub.ui.events.EventListViewModel
@@ -198,11 +200,9 @@ fun ChatPlaceholderScreen() {
     Scaffold(
         topBar = {
             TopAppBar(
-                title = { Text("Mensajes") },
-                colors = TopAppBarDefaults.topAppBarColors(
-                    containerColor = com.example.djeventhub.ui.theme.DeepBlack
-                ),
-                windowInsets = WindowInsets(0.dp)
+                title = { Text("Mensajes", style = MaterialTheme.typography.bodyMedium, fontWeight = FontWeight.Bold, color = com.example.djeventhub.ui.theme.TextPrimary) },
+                colors = TopAppBarDefaults.topAppBarColors(containerColor = com.example.djeventhub.ui.theme.DeepBlack),
+                modifier = Modifier.fillMaxWidth().windowInsetsPadding(WindowInsets.statusBars)
             )
         },
         containerColor = com.example.djeventhub.ui.theme.DeepBlack

@@ -42,43 +42,26 @@ fun ProductoraProfileScreen(
         uri?.let { viewModel.uploadProfilePhoto(it) }
     }
 
+    val themeController = LocalThemeController.current
+
     Scaffold(
         topBar = {
             if (showTopBar) {
-                CenterAlignedTopAppBar(
-                    title = {
-                        Text(
-                            "Mi Perfil",
-                            style = MaterialTheme.typography.titleLarge,
-                            fontWeight = FontWeight.Bold,
-                            color = TextPrimary
-                        )
-                    },
-                    navigationIcon = {
-                        IconButton(onClick = onNavigateBack) {
-                            Icon(
-                                Icons.AutoMirrored.Filled.ArrowBack,
-                                contentDescription = "Volver",
-                                modifier = Modifier.size(20.dp)
-                            )
-                        }
-                    },
+                TopAppBar(
+                    title = { Text("Mi Perfil", style = MaterialTheme.typography.bodyMedium, fontWeight = FontWeight.Bold, color = TextPrimary) },
+                    navigationIcon = { IconButton(onClick = onNavigateBack) { Icon(Icons.AutoMirrored.Filled.ArrowBack, contentDescription = "Volver") } },
                     actions = {
+                        IconButton(onClick = { themeController.toggle() }) {
+                            Icon(imageVector = if (themeController.isDark) Icons.Default.AccountCircle else Icons.Default.Edit, contentDescription = "Alternar tema")
+                        }
                         if (uiState is ProductoraProfileUiState.Success) {
                             IconButton(onClick = onEdit) {
-                                Icon(
-                                    Icons.Default.Edit,
-                                    contentDescription = "Editar",
-                                    tint = NeonPink,
-                                    modifier = Modifier.size(20.dp)
-                                )
+                                Icon(Icons.Default.Edit, contentDescription = "Editar", tint = NeonPink)
                             }
                         }
                     },
-                    colors = TopAppBarDefaults.centerAlignedTopAppBarColors(
-                        containerColor = DeepBlack
-                    ),
-                    modifier = Modifier.height(56.dp)
+                    colors = TopAppBarDefaults.topAppBarColors(containerColor = MaterialTheme.colorScheme.surface),
+                    modifier = Modifier.fillMaxWidth().windowInsetsPadding(WindowInsets.statusBars)
                 )
             }
         },
@@ -130,6 +113,8 @@ fun ProductoraProfileContent(
     onLogout: () -> Unit,
     modifier: Modifier = Modifier
 ) {
+    val themeController = LocalThemeController.current
+
     Column(
         modifier = modifier
             .fillMaxSize()
@@ -141,6 +126,24 @@ fun ProductoraProfileContent(
         ProductoraProfileHeader(user, onPickImage)
 
         Spacer(modifier = Modifier.height(24.dp))
+
+        // Theme toggle (visible control in profile)
+        Row(
+            modifier = Modifier
+                .fillMaxWidth()
+                .padding(horizontal = 8.dp),
+            verticalAlignment = Alignment.CenterVertically,
+            horizontalArrangement = Arrangement.SpaceBetween
+        ) {
+            Text(text = "Tema oscuro", style = MaterialTheme.typography.bodyMedium, color = TextPrimary)
+            Switch(
+                checked = themeController.isDark,
+                onCheckedChange = { themeController.toggle() },
+                colors = SwitchDefaults.colors(checkedThumbColor = NeonPink, uncheckedThumbColor = TextTertiary)
+            )
+        }
+
+        Spacer(modifier = Modifier.height(16.dp))
 
         // Company description
         if (!user.description.isNullOrBlank()) {

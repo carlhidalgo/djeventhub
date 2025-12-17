@@ -94,20 +94,9 @@ fun EditProductoraProfileScreen(
 
     Scaffold(
         topBar = {
-            CenterAlignedTopAppBar(
-                title = {
-                    Text(
-                        "Editar Perfil",
-                        style = MaterialTheme.typography.titleLarge,
-                        fontWeight = FontWeight.Bold,
-                        color = TextPrimary
-                    )
-                },
-                navigationIcon = {
-                    IconButton(onClick = onNavigateBack) {
-                        Icon(Icons.AutoMirrored.Filled.ArrowBack, contentDescription = "Volver")
-                    }
-                },
+            TopAppBar(
+                title = { Text("Editar Perfil", style = MaterialTheme.typography.bodyMedium, fontWeight = FontWeight.Bold, color = TextPrimary) },
+                navigationIcon = { IconButton(onClick = onNavigateBack) { Icon(Icons.AutoMirrored.Filled.ArrowBack, contentDescription = "Volver") } },
                 actions = {
                     IconButton(
                         onClick = {
@@ -126,8 +115,8 @@ fun EditProductoraProfileScreen(
                         Icon(Icons.Default.Check, contentDescription = "Guardar", tint = if (isFormValid) NeonPink else TextSecondary)
                     }
                 },
-                colors = TopAppBarDefaults.centerAlignedTopAppBarColors(containerColor = DeepBlack),
-                modifier = Modifier.height(56.dp)
+                colors = TopAppBarDefaults.topAppBarColors(containerColor = MaterialTheme.colorScheme.surface),
+                modifier = Modifier.fillMaxWidth().windowInsetsPadding(WindowInsets.statusBars)
             )
         },
         snackbarHost = { SnackbarHost(snackbarHostState) },

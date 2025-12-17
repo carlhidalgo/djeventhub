@@ -45,6 +45,9 @@ sealed class Screen(val route: String) {
     object PublicDJProfile : Screen("public_dj_profile/{djId}") {
         fun createRoute(djId: String) = "public_dj_profile/$djId"
     }
+    object SearchDJs : Screen("search_djs")
+    object ProductoraProfile : Screen("productora_profile")
+    object EditProductoraProfile : Screen("edit_productora_profile")
 }
 
 @Composable
@@ -184,10 +187,10 @@ fun AppNavigation(
                     }
                 },
                 onSearchDJs = {
-                    // TODO: Navigate to search DJs screen
+                    navController.navigate(Screen.SearchDJs.route)
                 },
                 onProfile = {
-                    // TODO: Navigate to profile screen
+                    navController.navigate(Screen.ProductoraProfile.route)
                 },
                 onAddEvent = {
                     navController.navigate(Screen.AddEvent.route)
@@ -343,8 +346,44 @@ fun AppNavigation(
                 onNavigateBack = {
                     navController.popBackStack()
                 },
-                onContactDJ = {
-                    // TODO: Navigate to chat with DJ
+                onContactDJ = { userId, userName, userImage ->
+                    com.example.djeventhub.ui.chat.ChatHelper.startChatWith(
+                        navController = navController,
+                        scope = scope,
+                        otherUserId = userId,
+                        otherUserName = userName,
+                        otherUserImage = userImage
+                    )
+                }
+            )
+        }
+
+        composable(Screen.SearchDJs.route) {
+            com.example.djeventhub.ui.productora.SearchDJsScreen(
+                onNavigateBack = {
+                    navController.popBackStack()
+                },
+                onDJClick = { djId ->
+                    navController.navigate(Screen.PublicDJProfile.createRoute(djId))
+                }
+            )
+        }
+
+        composable(Screen.ProductoraProfile.route) {
+            com.example.djeventhub.ui.productora.profile.ProductoraProfileScreen(
+                onNavigateBack = {
+                    navController.popBackStack()
+                },
+                onEdit = {
+                    navController.navigate(Screen.EditProductoraProfile.route)
+                }
+            )
+        }
+
+        composable(Screen.EditProductoraProfile.route) {
+            com.example.djeventhub.ui.productora.profile.EditProductoraProfileScreen(
+                onNavigateBack = {
+                    navController.popBackStack()
                 }
             )
         }

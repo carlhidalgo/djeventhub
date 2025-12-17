@@ -1,4 +1,4 @@
-    package com.example.djeventhub
+package com.example.djeventhub
 
 import android.Manifest
 import android.content.pm.PackageManager
@@ -20,6 +20,8 @@ import androidx.core.content.ContextCompat
 import com.example.djeventhub.location.LocationManager
 import com.example.djeventhub.navigation.AppNavigation
 import com.example.djeventhub.ui.theme.DJEventHubTheme
+import com.example.djeventhub.ui.theme.LocalThemeController
+import com.example.djeventhub.ui.theme.rememberThemeController
 import com.google.android.libraries.places.api.Places
 import com.google.firebase.FirebaseApp
 import dagger.hilt.android.AndroidEntryPoint
@@ -31,12 +33,10 @@ class MainActivity : ComponentActivity() {
         // Initialize Firebase
         FirebaseApp.initializeApp(this)
 
-        // Initialize Places SDK
-        // TODO: Add your Maps API key to local.properties as MAPS_API_KEY=your_key_here
-        // The key is automatically loaded from BuildConfig or use a default for development
+        // Initialize Places SDK with API key from local.properties
         if (!Places.isInitialized()) {
             try {
-                val apiKey = BuildConfig.MAPS_API_KEY.ifEmpty { "YOUR_API_KEY_HERE" }
+                val apiKey = BuildConfig.MAPS_API_KEY
                 Places.initialize(applicationContext, apiKey)
             } catch (e: Exception) {
                 // Places will not work without a valid API key
@@ -53,12 +53,16 @@ class MainActivity : ComponentActivity() {
             )
         )
         setContent {
-            DJEventHubTheme {
-                Surface(
-                    modifier = Modifier.fillMaxSize(),
-                    color = com.example.djeventhub.ui.theme.DeepBlack
-                ) {
-                    MainContent()
+            // Create and provide a ThemeController
+            val themeController = rememberThemeController(defaultDark = true)
+            CompositionLocalProvider(LocalThemeController provides themeController) {
+                DJEventHubTheme(darkTheme = themeController.isDark) {
+                    Surface(
+                        modifier = Modifier.fillMaxSize(),
+                        color = com.example.djeventhub.ui.theme.DeepBlack
+                    ) {
+                        MainContent()
+                    }
                 }
             }
         }

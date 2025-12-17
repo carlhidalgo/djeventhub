@@ -74,24 +74,20 @@ fun EditDJProfileScreen(
         lastState = uiState
     }
 
-    // Validations
-    val artistNameError = remember(artistName) {
-        when {
-            artistName.isBlank() -> "Requerido"
-            artistName.length < 2 -> "Mínimo 2 caracteres"
-            artistName.length > 40 -> "Máximo 40"
-            else -> null
-        }
+    // Validations (plain vals to avoid remember returning Unit)
+    val artistNameError: String? = when {
+        artistName.isBlank() -> "Requerido"
+        artistName.length < 2 -> "Mínimo 2 caracteres"
+        artistName.length > 40 -> "Máximo 40"
+        else -> null
     }
-    val bioError = remember(bio) {
-        if (bio.length > 300) "Máximo 300 caracteres" else null
-    }
-    val phoneError = remember(phone) {
-        if (phone.isNotBlank() && !phone.matches("^[+0-9]{7,15}$".toRegex())) "Teléfono inválido" else null
-    }
-    val locationError = remember(location) {
-        if (location.length > 60) "Máximo 60" else null
-    }
+
+    val bioError: String? = if (bio.length > 300) "Máximo 300 caracteres" else null
+
+    val phoneError: String? = if (phone.isNotBlank() && !phone.matches("^[+0-9]{7,15}$".toRegex())) "Teléfono inválido" else null
+
+    val locationError: String? = if (location.length > 60) "Máximo 60" else null
+
     val isFormValid = artistNameError == null && bioError == null && phoneError == null && locationError == null
 
     // Show snackbars for messages
@@ -104,11 +100,11 @@ fun EditDJProfileScreen(
 
     Scaffold(
         topBar = {
-            CenterAlignedTopAppBar(
+            SmallTopAppBar(
                 title = {
                     Text(
-                        "Editar Perfil",
-                        style = MaterialTheme.typography.titleLarge,
+                        "Editar perfil",
+                        style = MaterialTheme.typography.bodyMedium,
                         fontWeight = FontWeight.Bold,
                         color = TextPrimary
                     )
@@ -133,18 +129,17 @@ fun EditDJProfileScreen(
                                 )
                             }
                         },
-                        enabled = uiState !is DJProfileUiState.Loading && isFormValid
+                        enabled = isFormValid
                     ) {
                         Icon(Icons.Default.Check, contentDescription = "Guardar", tint = if (isFormValid) NeonPink else TextSecondary)
                     }
                 },
-                colors = TopAppBarDefaults.centerAlignedTopAppBarColors(containerColor = DeepBlack),
-                modifier = Modifier.height(56.dp)
+                colors = TopAppBarDefaults.smallTopAppBarColors(containerColor = MaterialTheme.colorScheme.surface),
+                modifier = Modifier.fillMaxWidth().windowInsetsPadding(WindowInsets.statusBars)
             )
-        },
-        snackbarHost = { SnackbarHost(snackbarHostState) },
-        containerColor = DeepBlack
-    ) { padding ->
+         },
+         containerColor = DeepBlack
+     ) { padding ->
         Column(
             modifier = Modifier
                 .fillMaxSize()

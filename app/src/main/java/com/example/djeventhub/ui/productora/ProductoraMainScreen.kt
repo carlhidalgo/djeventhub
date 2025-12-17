@@ -198,19 +198,10 @@ fun ProductoraMainScreen(
 fun SearchDJsPlaceholderScreen(onSearch: () -> Unit) {
     Scaffold(
         topBar = {
-            CenterAlignedTopAppBar(
-                title = {
-                    Text(
-                        "Buscar DJs",
-                        style = MaterialTheme.typography.titleLarge,
-                        fontWeight = androidx.compose.ui.text.font.FontWeight.Bold,
-                        color = com.example.djeventhub.ui.theme.TextPrimary
-                    )
-                },
-                colors = TopAppBarDefaults.centerAlignedTopAppBarColors(
-                    containerColor = com.example.djeventhub.ui.theme.DeepBlack
-                ),
-                modifier = Modifier.height(56.dp)
+            TopAppBar(
+                title = { Text("Buscar DJs", style = MaterialTheme.typography.bodyMedium, fontWeight = androidx.compose.ui.text.font.FontWeight.Bold, color = com.example.djeventhub.ui.theme.TextPrimary) },
+                colors = TopAppBarDefaults.topAppBarColors(containerColor = com.example.djeventhub.ui.theme.DeepBlack),
+                modifier = Modifier.fillMaxWidth().windowInsetsPadding(WindowInsets.statusBars)
             )
         },
         containerColor = com.example.djeventhub.ui.theme.DeepBlack
@@ -266,19 +257,10 @@ fun SearchDJsPlaceholderScreen(onSearch: () -> Unit) {
 fun ChatPlaceholderScreen() {
     Scaffold(
         topBar = {
-            CenterAlignedTopAppBar(
-                title = {
-                    Text(
-                        "Mensajes",
-                        style = MaterialTheme.typography.titleLarge,
-                        fontWeight = androidx.compose.ui.text.font.FontWeight.Bold,
-                        color = com.example.djeventhub.ui.theme.TextPrimary
-                    )
-                },
-                colors = TopAppBarDefaults.centerAlignedTopAppBarColors(
-                    containerColor = com.example.djeventhub.ui.theme.DeepBlack
-                ),
-                modifier = Modifier.height(56.dp)
+            TopAppBar(
+                title = { Text("Mensajes", style = MaterialTheme.typography.bodyMedium, fontWeight = androidx.compose.ui.text.font.FontWeight.Bold, color = com.example.djeventhub.ui.theme.TextPrimary) },
+                colors = TopAppBarDefaults.topAppBarColors(containerColor = com.example.djeventhub.ui.theme.DeepBlack),
+                modifier = Modifier.fillMaxWidth().windowInsetsPadding(WindowInsets.statusBars)
             )
         },
         containerColor = com.example.djeventhub.ui.theme.DeepBlack
@@ -323,24 +305,11 @@ fun ProductoraProfilePlaceholderScreen(
 ) {
     Scaffold(
         topBar = {
-            CenterAlignedTopAppBar(
-                title = {
-                    Text(
-                        "Mi Perfil",
-                        style = MaterialTheme.typography.titleLarge,
-                        fontWeight = androidx.compose.ui.text.font.FontWeight.Bold,
-                        color = com.example.djeventhub.ui.theme.TextPrimary
-                    )
-                },
-                navigationIcon = {
-                    IconButton(onClick = onNavigateBack) {
-                        Icon(Icons.AutoMirrored.Filled.ArrowBack, contentDescription = "Volver")
-                    }
-                },
-                colors = TopAppBarDefaults.centerAlignedTopAppBarColors(
-                    containerColor = com.example.djeventhub.ui.theme.DeepBlack
-                ),
-                modifier = Modifier.height(56.dp)
+            TopAppBar(
+                title = { Text("Mi Perfil", style = MaterialTheme.typography.bodyMedium, fontWeight = androidx.compose.ui.text.font.FontWeight.Bold, color = com.example.djeventhub.ui.theme.TextPrimary) },
+                navigationIcon = { IconButton(onClick = onNavigateBack) { Icon(Icons.AutoMirrored.Filled.ArrowBack, contentDescription = "Volver") } },
+                colors = TopAppBarDefaults.topAppBarColors(containerColor = com.example.djeventhub.ui.theme.DeepBlack),
+                modifier = Modifier.fillMaxWidth().windowInsetsPadding(WindowInsets.statusBars)
             )
         },
         containerColor = com.example.djeventhub.ui.theme.DeepBlack
